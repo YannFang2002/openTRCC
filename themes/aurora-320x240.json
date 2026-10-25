@@ -1,0 +1,74 @@
+{
+  "schemaVersion": 1,
+  "id": "aurora-320x240",
+  "name": "Aurora",
+  "canvas": {
+    "width": 320,
+    "height": 240,
+    "background": {
+      "kind": "procedural",
+      "preset": "aurora",
+      "speed": 1.0,
+      "colors": ["#050912", "#2DD4BF", "#6366F1", "#A855F7"],
+      "dim": 0.1
+    }
+  },
+  "layers": [
+    {
+      "type": "text",
+      "id": "time",
+      "x": 0, "y": 26, "w": 320, "h": 60,
+      "text": "{time:HH:mm}",
+      "font": { "family": "Consolas", "size": 48, "weight": 700 },
+      "color": "#E6FFFB",
+      "align": "center",
+      "verticalAlign": "middle"
+    },
+    {
+      "type": "text",
+      "id": "date",
+      "x": 0, "y": 84, "w": 320, "h": 18,
+      "text": "{date}",
+      "font": { "family": "Segoe UI", "size": 11, "weight": 500 },
+      "color": "#A5F3FC",
+      "align": "center"
+    },
+    {
+      "type": "text",
+      "id": "cpu",
+      "x": 16, "y": 196, "w": 130, "h": 20,
+      "text": "CPU {cpu.load.total:0}%",
+      "font": { "family": "Segoe UI", "size": 12, "weight": 600 },
+      "color": "#CFFAFE"
+    },
+    {
+      "type": "text",
+      "id": "gpu",
+      "x": 174, "y": 196, "w": 130, "h": 20,
+      "text": "GPU {gpu.temp.core:0}° {gpu.load.core:0}%",
+      "font": { "family": "Segoe UI", "size": 12, "weight": 600 },
+      "color": "#CFFAFE",
+      "align": "right"
+    },
+    {
+      "type": "bar",
+      "id": "cpu-bar",
+      "x": 16, "y": 218, "w": 130, "h": 4,
+      "value": "{cpu.load.total}",
+      "min": 0, "max": 100,
+      "track": "#1E293B",
+      "fill": "#2DD4BF",
+      "radius": 2
+    },
+    {
+      "type": "bar",
+      "id": "gpu-bar",
+      "x": 174, "y": 218, "w": 130, "h": 4,
+      "value": "{gpu.load.core}",
+      "min": 0, "max": 100,
+      "track": "#1E293B",
+      "fill": "#A855F7",
+      "radius": 2
+    }
+  ]
+}

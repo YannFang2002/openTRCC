@@ -1,0 +1,52 @@
+{
+  "schemaVersion": 1,
+  "id": "ronin-320x240",
+  "name": "Ronin",
+  "canvas": {
+    "width": 320,
+    "height": 240,
+    "background": {
+      "kind": "procedural",
+      "preset": "ronin",
+      "speed": 1.0,
+      "colors": ["#05070C", "#EF4444", "#38BDF8"],
+      "dim": 0
+    }
+  },
+  "layers": [
+    {
+      "type": "text",
+      "id": "title",
+      "x": 14, "y": 12, "w": 120, "h": 18,
+      "text": "RONIN",
+      "font": { "family": "Segoe UI", "size": 10, "weight": 700 },
+      "color": "#F87171"
+    },
+    {
+      "type": "text",
+      "id": "time",
+      "x": 200, "y": 12, "w": 106, "h": 18,
+      "text": "{time:HH:mm}",
+      "font": { "family": "Consolas", "size": 11, "weight": 500 },
+      "color": "#94A3B8",
+      "align": "right"
+    },
+    {
+      "type": "text",
+      "id": "fps",
+      "x": 14, "y": 206, "w": 120, "h": 22,
+      "text": "{fps.current:0} FPS",
+      "font": { "family": "Consolas", "size": 13, "weight": 700 },
+      "color": "#E2E8F0"
+    },
+    {
+      "type": "text",
+      "id": "stats",
+      "x": 180, "y": 206, "w": 126, "h": 22,
+      "text": "CPU {cpu.load.total:0}% · GPU {gpu.temp.core:0}°",
+      "font": { "family": "Consolas", "size": 9, "weight": 500 },
+      "color": "#94A3B8",
+      "align": "right"
+    }
+  ]
+}

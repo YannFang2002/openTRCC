@@ -1,0 +1,46 @@
+{
+  "schemaVersion": 1,
+  "id": "rain-320x240",
+  "name": "Rain",
+  "canvas": {
+    "width": 320,
+    "height": 240,
+    "background": {
+      "kind": "procedural",
+      "preset": "rain",
+      "speed": 1.0,
+      "colors": ["#04070A", "#22C55E"],
+      "dim": 0.05
+    }
+  },
+  "layers": [
+    {
+      "type": "text",
+      "id": "time",
+      "x": 0, "y": 70, "w": 320, "h": 56,
+      "text": "{time:HH:mm}",
+      "font": { "family": "Consolas", "size": 46, "weight": 700 },
+      "color": "#DCFCE7",
+      "align": "center",
+      "verticalAlign": "middle"
+    },
+    {
+      "type": "text",
+      "id": "stats",
+      "x": 0, "y": 132, "w": 320, "h": 18,
+      "text": "CPU {cpu.load.total:0}% · GPU {gpu.temp.core:0}°",
+      "font": { "family": "Consolas", "size": 10, "weight": 500 },
+      "color": "#86EFAC",
+      "align": "center"
+    },
+    {
+      "type": "text",
+      "id": "fps",
+      "x": 0, "y": 196, "w": 320, "h": 24,
+      "text": "{fps.current:0} FPS",
+      "font": { "family": "Consolas", "size": 14, "weight": 700 },
+      "color": "#BBF7D0",
+      "align": "center"
+    }
+  ]
+}

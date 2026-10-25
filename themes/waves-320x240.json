@@ -1,0 +1,55 @@
+{
+  "schemaVersion": 1,
+  "id": "waves-320x240",
+  "name": "Waves",
+  "canvas": {
+    "width": 320,
+    "height": 240,
+    "background": {
+      "kind": "procedural",
+      "preset": "waves",
+      "speed": 1.0,
+      "colors": ["#071018", "#0EA5E9", "#22D3EE", "#818CF8"],
+      "dim": 0.05
+    }
+  },
+  "layers": [
+    {
+      "type": "text",
+      "id": "fps",
+      "x": 0, "y": 36, "w": 320, "h": 84,
+      "text": "{fps.current:0}",
+      "font": { "family": "Consolas", "size": 68, "weight": 700 },
+      "color": "#E0F2FE",
+      "align": "center",
+      "verticalAlign": "middle",
+      "hideWhenMissing": true
+    },
+    {
+      "type": "text",
+      "id": "label",
+      "x": 0, "y": 118, "w": 320, "h": 18,
+      "text": "FPS · 1% {fps.low1:0}",
+      "font": { "family": "Segoe UI", "size": 11, "weight": 600 },
+      "color": "#7DD3FC",
+      "align": "center"
+    },
+    {
+      "type": "text",
+      "id": "cpu",
+      "x": 16, "y": 24, "w": 130, "h": 18,
+      "text": "CPU {cpu.load.total:0}%",
+      "font": { "family": "Segoe UI", "size": 11, "weight": 600 },
+      "color": "#BAE6FD"
+    },
+    {
+      "type": "text",
+      "id": "gpu",
+      "x": 174, "y": 24, "w": 130, "h": 18,
+      "text": "GPU {gpu.temp.core:0}°",
+      "font": { "family": "Segoe UI", "size": 11, "weight": 600 },
+      "color": "#BAE6FD",
+      "align": "right"
+    }
+  ]
+}

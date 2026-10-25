@@ -1,0 +1,88 @@
+{
+  "schemaVersion": 1,
+  "id": "horizon-320x240",
+  "name": "Horizon",
+  "canvas": {
+    "width": 320,
+    "height": 240,
+    "background": {
+      "kind": "gradient",
+      "colors": ["#1B1035", "#6D28D9", "#F59E0B"],
+      "angle": 90
+    }
+  },
+  "layers": [
+    {
+      "type": "text",
+      "id": "date",
+      "x": 0, "y": 26, "w": 320, "h": 18,
+      "text": "{date}",
+      "font": { "family": "Segoe UI", "size": 11, "weight": 500 },
+      "color": "#C4B5FD",
+      "align": "center"
+    },
+    {
+      "type": "text",
+      "id": "clock",
+      "x": 0, "y": 44, "w": 320, "h": 74,
+      "text": "{time:HH:mm}",
+      "font": { "family": "Consolas", "size": 62, "weight": 700 },
+      "color": "#FFFFFF",
+      "align": "center",
+      "verticalAlign": "middle"
+    },
+    {
+      "type": "text",
+      "id": "seconds",
+      "x": 0, "y": 116, "w": 320, "h": 16,
+      "text": "{time:ss}",
+      "font": { "family": "Segoe UI", "size": 10, "weight": 500 },
+      "color": "#C4B5FD",
+      "align": "center"
+    },
+    {
+      "type": "bar",
+      "id": "sun-line",
+      "x": 24, "y": 150, "w": 272, "h": 3,
+      "value": "{cpu.load.total}",
+      "min": 0, "max": 100,
+      "track": "#4C1D95",
+      "fill": "#FDE68A",
+      "radius": 2
+    },
+    {
+      "type": "text",
+      "id": "cpu",
+      "x": 24, "y": 162, "w": 90, "h": 18,
+      "text": "CPU {cpu.load.total:0}%",
+      "font": { "family": "Segoe UI", "size": 11, "weight": 600 },
+      "color": "#FDE68A"
+    },
+    {
+      "type": "text",
+      "id": "gpu",
+      "x": 206, "y": 162, "w": 90, "h": 18,
+      "text": "{gpu.temp.core:0}° GPU",
+      "font": { "family": "Segoe UI", "size": 11, "weight": 600 },
+      "color": "#FDE68A",
+      "align": "right"
+    },
+    {
+      "type": "text",
+      "id": "fps",
+      "x": 24, "y": 190, "w": 120, "h": 30,
+      "text": "{fps.current:0} FPS",
+      "font": { "family": "Segoe UI", "size": 18, "weight": 700 },
+      "color": "#FFFFFF"
+    },
+    {
+      "type": "text",
+      "id": "mem",
+      "x": 196, "y": 194, "w": 100, "h": 20,
+      "text": "MEM {mem.load:0}%",
+      "font": { "family": "Segoe UI", "size": 11, "weight": 600 },
+      "color": "#E9D5FF",
+      "align": "right"
+    }
+  ]
+}

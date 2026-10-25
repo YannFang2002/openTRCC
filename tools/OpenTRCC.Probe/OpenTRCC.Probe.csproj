@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <RootNamespace>OpenTRCC.Probe</RootNamespace>
+    <AssemblyName>OpenTRCC.Probe</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\OpenTRCC.Core\OpenTRCC.Core.csproj" />
+    <ProjectReference Include="..\..\src\OpenTRCC.Devices\OpenTRCC.Devices.csproj" />
+    <ProjectReference Include="..\..\src\OpenTRCC.Sensors\OpenTRCC.Sensors.csproj" />
+  </ItemGroup>
+
+</Project>

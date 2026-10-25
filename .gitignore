@@ -1,0 +1,22 @@
+# Build output
+[Bb]in/
+[Oo]bj/
+artifacts/
+TestResults/
+*.user
+*.suo
+
+# Repo-local SDK (installed by scripts/install-dotnet.ps1)
+.dotnet/
+
+# IDE
+.vs/
+.idea/
+*.swp
+
+# Probe evidence (regenerated on demand)
+artifacts/probe-runs/
+
+# OS
+Thumbs.db
+desktop.ini

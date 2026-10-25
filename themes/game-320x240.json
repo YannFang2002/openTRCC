@@ -1,0 +1,101 @@
+{
+  "schemaVersion": 1,
+  "id": "game-320x240",
+  "name": "Game",
+  "canvas": {
+    "width": 320,
+    "height": 240,
+    "background": {
+      "kind": "gradient",
+      "colors": ["#0A1F18", "#1B4A38"],
+      "angle": 135
+    }
+  },
+  "layers": [
+    {
+      "type": "text",
+      "id": "fps",
+      "x": 0, "y": 22, "w": 320, "h": 96,
+      "text": "{fps.current:0}",
+      "font": { "family": "Consolas", "size": 92, "weight": 700 },
+      "color": "#34D399",
+      "align": "center",
+      "verticalAlign": "middle",
+      "hideWhenMissing": true
+    },
+    {
+      "type": "text",
+      "id": "label",
+      "x": 0, "y": 112, "w": 320, "h": 18,
+      "text": "FPS · 1% {fps.low1:0}",
+      "font": { "family": "Segoe UI", "size": 11, "weight": 600 },
+      "color": "#6EE7B7",
+      "align": "center"
+    },
+    {
+      "type": "sparkline",
+      "id": "graph",
+      "x": 16, "y": 140, "w": 288, "h": 34,
+      "source": "{fps.current}",
+      "samples": 60,
+      "min": 0, "max": 240,
+      "stroke": "#34D399",
+      "lineWidth": 2,
+      "fill": "#064E3B"
+    },
+    {
+      "type": "text",
+      "id": "cpu-label",
+      "x": 16, "y": 184, "w": 70, "h": 14,
+      "text": "CPU {cpu.load.total:0}%",
+      "font": { "family": "Segoe UI", "size": 10, "weight": 600 },
+      "color": "#94A3B8"
+    },
+    {
+      "type": "bar",
+      "id": "cpu-bar",
+      "x": 16, "y": 200, "w": 136, "h": 6,
+      "value": "{cpu.load.total}",
+      "min": 0, "max": 100,
+      "track": "#1F2937",
+      "fill": "#22D3EE",
+      "radius": 3
+    },
+    {
+      "type": "text",
+      "id": "gpu-label",
+      "x": 168, "y": 184, "w": 136, "h": 14,
+      "text": "GPU {gpu.load.core:0}% · {gpu.temp.core:0}°",
+      "font": { "family": "Segoe UI", "size": 10, "weight": 600 },
+      "color": "#94A3B8",
+      "align": "right"
+    },
+    {
+      "type": "bar",
+      "id": "gpu-bar",
+      "x": 168, "y": 200, "w": 136, "h": 6,
+      "value": "{gpu.load.core}",
+      "min": 0, "max": 100,
+      "track": "#1F2937",
+      "fill": "#F59E0B",
+      "radius": 3
+    },
+    {
+      "type": "text",
+      "id": "clock",
+      "x": 16, "y": 214, "w": 80, "h": 16,
+      "text": "{time:HH:mm}",
+      "font": { "family": "Segoe UI", "size": 10, "weight": 500 },
+      "color": "#475569"
+    },
+    {
+      "type": "text",
+      "id": "app",
+      "x": 100, "y": 214, "w": 204, "h": 16,
+      "text": "{fps.process}",
+      "font": { "family": "Segoe UI", "size": 10, "weight": 500 },
+      "color": "#475569",
+      "align": "right"
+    }
+  ]
+}

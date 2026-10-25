@@ -1,0 +1,96 @@
+{
+  "schemaVersion": 1,
+  "id": "pulse-320x240",
+  "name": "Pulse",
+  "canvas": {
+    "width": 320,
+    "height": 240,
+    "background": {
+      "kind": "gradient",
+      "colors": ["#12203C", "#2A4372"],
+      "angle": 135
+    }
+  },
+  "layers": [
+    {
+      "type": "ring",
+      "id": "cpu-ring",
+      "x": 14, "y": 22, "w": 132, "h": 132,
+      "value": "{cpu.temp.package}",
+      "min": 20, "max": 100,
+      "thickness": 11,
+      "track": "#1F2937",
+      "fill": ["#5EEAD4", "#F59E0B", "#EF4444"],
+      "startAngle": 135,
+      "sweepAngle": 270
+    },
+    {
+      "type": "text",
+      "id": "cpu-temp",
+      "x": 14, "y": 62, "w": 132, "h": 44,
+      "text": "{cpu.temp.package:0}°",
+      "font": { "family": "Segoe UI", "size": 34, "weight": 600 },
+      "color": "#FFFFFF",
+      "align": "center",
+      "verticalAlign": "middle"
+    },
+    {
+      "type": "text",
+      "id": "cpu-label",
+      "x": 14, "y": 108, "w": 132, "h": 18,
+      "text": "CPU",
+      "font": { "family": "Segoe UI", "size": 12, "weight": 500 },
+      "color": "#94A3B8",
+      "align": "center"
+    },
+    {
+      "type": "text",
+      "id": "fps",
+      "x": 168, "y": 30, "w": 138, "h": 50,
+      "text": "{fps.current:0}",
+      "font": { "family": "Segoe UI", "size": 40, "weight": 700 },
+      "color": "#5EEAD4",
+      "align": "right"
+    },
+    {
+      "type": "text",
+      "id": "fps-label",
+      "x": 168, "y": 82, "w": 138, "h": 18,
+      "text": "FPS · 1% {fps.low1:0}",
+      "font": { "family": "Segoe UI", "size": 12, "weight": 500 },
+      "color": "#94A3B8",
+      "align": "right"
+    },
+    {
+      "type": "bar",
+      "id": "gpu-load",
+      "x": 168, "y": 112, "w": 138, "h": 10,
+      "value": "{gpu.load.core}",
+      "min": 0, "max": 100,
+      "track": "#1F2937",
+      "fill": "#F59E0B",
+      "radius": 5
+    },
+    {
+      "type": "bar",
+      "id": "mem-load",
+      "x": 168, "y": 132, "w": 138, "h": 10,
+      "value": "{mem.load}",
+      "min": 0, "max": 100,
+      "track": "#1F2937",
+      "fill": "#818CF8",
+      "radius": 5
+    },
+    {
+      "type": "sparkline",
+      "id": "fps-graph",
+      "x": 18, "y": 194, "w": 284, "h": 32,
+      "source": "{fps.current}",
+      "samples": 60,
+      "min": 0, "max": 160,
+      "stroke": "#5EEAD4",
+      "lineWidth": 1.5,
+      "fill": "#0F766E"
+    }
+  ]
+}

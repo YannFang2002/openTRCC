@@ -1,0 +1,37 @@
+{
+  "schemaVersion": 1,
+  "id": "particles-320x240",
+  "name": "Particles",
+  "canvas": {
+    "width": 320,
+    "height": 240,
+    "background": {
+      "kind": "procedural",
+      "preset": "particles",
+      "speed": 1.0,
+      "colors": ["#0A0A12", "#5EEAD4", "#93C5FD", "#F0ABFC"],
+      "dim": 0.05
+    }
+  },
+  "layers": [
+    {
+      "type": "text",
+      "id": "time",
+      "x": 0, "y": 80, "w": 320, "h": 56,
+      "text": "{time:HH:mm}",
+      "font": { "family": "Consolas", "size": 44, "weight": 700 },
+      "color": "#F5F3FF",
+      "align": "center",
+      "verticalAlign": "middle"
+    },
+    {
+      "type": "text",
+      "id": "stats",
+      "x": 0, "y": 140, "w": 320, "h": 18,
+      "text": "CPU {cpu.load.total:0}% · GPU {gpu.temp.core:0}° · MEM {mem.load:0}%",
+      "font": { "family": "Segoe UI", "size": 10, "weight": 500 },
+      "color": "#C4B5FD",
+      "align": "center"
+    }
+  ]
+}

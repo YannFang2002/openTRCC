@@ -1,0 +1,47 @@
+{
+  "schemaVersion": 1,
+  "id": "plasma-320x240",
+  "name": "Plasma",
+  "canvas": {
+    "width": 320,
+    "height": 240,
+    "background": {
+      "kind": "procedural",
+      "preset": "plasma",
+      "speed": 0.8,
+      "colors": ["#120B2E", "#7C3AED", "#22D3EE", "#F472B6", "#FDE68A"],
+      "dim": 0.15
+    }
+  },
+  "layers": [
+    {
+      "type": "text",
+      "id": "fps",
+      "x": 0, "y": 48, "w": 320, "h": 84,
+      "text": "{fps.current:0}",
+      "font": { "family": "Consolas", "size": 66, "weight": 700 },
+      "color": "#FFFFFF",
+      "align": "center",
+      "verticalAlign": "middle",
+      "hideWhenMissing": true
+    },
+    {
+      "type": "text",
+      "id": "label",
+      "x": 0, "y": 132, "w": 320, "h": 18,
+      "text": "FPS · 1% {fps.low1:0}",
+      "font": { "family": "Segoe UI", "size": 11, "weight": 600 },
+      "color": "#FDE68A",
+      "align": "center"
+    },
+    {
+      "type": "text",
+      "id": "stats",
+      "x": 0, "y": 204, "w": 320, "h": 18,
+      "text": "CPU {cpu.load.total:0}% · GPU {gpu.temp.core:0}° · MEM {mem.load:0}%",
+      "font": { "family": "Segoe UI", "size": 10, "weight": 500 },
+      "color": "#E9D5FF",
+      "align": "center"
+    }
+  ]
+}
