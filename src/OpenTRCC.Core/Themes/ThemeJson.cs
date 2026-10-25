@@ -1,3 +1,4 @@
+﻿using System.Text.Encodings.Web;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using SkiaSharp;
@@ -16,6 +17,8 @@ public static class ThemeJson
         AllowTrailingCommas = true,
         DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
         Converters = { new JsonStringEnumConverter(JsonNamingPolicy.CamelCase) },
+        // Keep CJK names readable in the saved JSON instead of \uXXXX escapes.
+        Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
     };
 
     public static ThemeDocument Load(string path)

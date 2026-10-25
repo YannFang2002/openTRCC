@@ -146,7 +146,7 @@ public sealed class ThemeRenderer
             return;
         }
 
-        var destination = FitRect(bitmap.Width, bitmap.Height, new SKRect(0, 0, width, height), background.Fit);
+        var destination = FitRect(bitmap.Width, bitmap.Height, new SKRect(0, 0, width, height), background.Fit, background.Zoom);
 
         using (var paint = new SKPaint { IsAntialias = true })
         {
@@ -167,7 +167,7 @@ public sealed class ThemeRenderer
         SKCanvas canvas, BgraImage frame, ThemeBackground background, int width, int height)
     {
         using SKBitmap bitmap = TestPatternRenderer.FromBgra(frame);
-        var destination = FitRect(frame.Width, frame.Height, new SKRect(0, 0, width, height), background.Fit);
+        var destination = FitRect(frame.Width, frame.Height, new SKRect(0, 0, width, height), background.Fit, background.Zoom);
 
         using (var paint = new SKPaint { IsAntialias = true })
         {
@@ -486,7 +486,7 @@ public sealed class ThemeRenderer
         return bitmap;
     }
 
-    private static SKRect FitRect(int sourceWidth, int sourceHeight, SKRect box, string fit)
+    private static SKRect FitRect(int sourceWidth, int sourceHeight, SKRect box, string fit, double zoom = 1)
     {
         if (sourceWidth <= 0 || sourceHeight <= 0)
         {
@@ -496,16 +496,16 @@ public sealed class ThemeRenderer
         switch (fit.ToLowerInvariant())
         {
             case "stretch":
-                return box;
+                return ScaleAroundCenter(box, zoom);
 
             case "cover":
             {
                 float scale = Math.Max(box.Width / sourceWidth, box.Height / sourceHeight);
                 float width = sourceWidth * scale;
                 float height = sourceHeight * scale;
-                return new SKRect(
+                return ScaleAroundCenter(new SKRect(
                     box.MidX - width / 2, box.MidY - height / 2,
-                    box.MidX + width / 2, box.MidY + height / 2);
+                    box.MidX + width / 2, box.MidY + height / 2), zoom);
             }
 
             default: // contain
@@ -513,11 +513,25 @@ public sealed class ThemeRenderer
                 float scale = Math.Min(box.Width / sourceWidth, box.Height / sourceHeight);
                 float width = sourceWidth * scale;
                 float height = sourceHeight * scale;
-                return new SKRect(
+                return ScaleAroundCenter(new SKRect(
                     box.MidX - width / 2, box.MidY - height / 2,
-                    box.MidX + width / 2, box.MidY + height / 2);
+                    box.MidX + width / 2, box.MidY + height / 2), zoom);
             }
         }
+    }
+
+    private static SKRect ScaleAroundCenter(SKRect rect, double zoom)
+    {
+        if (Math.Abs(zoom - 1) < 0.001)
+        {
+            return rect;
+        }
+
+        float halfWidth = (float)(rect.Width * zoom / 2);
+        float halfHeight = (float)(rect.Height * zoom / 2);
+        return new SKRect(
+            rect.MidX - halfWidth, rect.MidY - halfHeight,
+            rect.MidX + halfWidth, rect.MidY + halfHeight);
     }
 
     private Queue<double> History(string source, int capacity)

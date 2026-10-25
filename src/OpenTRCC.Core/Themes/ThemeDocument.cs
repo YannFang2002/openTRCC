@@ -1,4 +1,4 @@
-using System.Text.Json.Serialization;
+﻿using System.Text.Json.Serialization;
 
 namespace OpenTRCC.Core.Themes;
 
@@ -58,6 +58,9 @@ public sealed record ThemeBackground
 
     /// <summary>Animation speed multiplier for procedural backgrounds.</summary>
     public double Speed { get; init; } = 1;
+
+    /// <summary>Extra zoom for image/GIF/video backgrounds (1 = fit, &gt;1 crops in).</summary>
+    public double Zoom { get; init; } = 1;
 }
 
 [JsonPolymorphic(TypeDiscriminatorPropertyName = "type")]

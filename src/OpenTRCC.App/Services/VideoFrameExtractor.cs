@@ -160,7 +160,9 @@ public static class VideoFrameExtractor
 
     private static byte[] Capture(MediaPlayer player)
     {
-        double scale = Math.Min(
+        // Cover: fill the canvas and crop the overflow, so imported clips have
+        // no baked-in letterbox bars.
+        double scale = Math.Max(
             (double)Width / player.NaturalVideoWidth,
             (double)Height / player.NaturalVideoHeight);
         double drawWidth = player.NaturalVideoWidth * scale;

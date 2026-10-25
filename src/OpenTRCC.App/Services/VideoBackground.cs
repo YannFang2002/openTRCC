@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.IO;
 using System.Linq;
 using System.Windows;
@@ -129,8 +129,8 @@ public static class VideoBackground
                 return null;
             }
 
-            // Letterbox to keep the source aspect ratio inside the 320x240 canvas.
-            double scale = Math.Min(
+            // Cover: fill the 320x240 canvas and crop the overflow (no black bars).
+            double scale = Math.Max(
                 (double)Width / _player.NaturalVideoWidth,
                 (double)Height / _player.NaturalVideoHeight);
             double drawWidth = _player.NaturalVideoWidth * scale;

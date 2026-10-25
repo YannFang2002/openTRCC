@@ -1,4 +1,4 @@
-<UserControl x:Class="OpenTRCC.App.Editor.EditorView"
+﻿<UserControl x:Class="OpenTRCC.App.Editor.EditorView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml">
@@ -19,6 +19,9 @@
                 <ui:Button Content="图片" Click="OnAddImage" Margin="0,0,6,6" />
                 <ui:Button Content="撤销" Click="OnUndo" Margin="0,0,6,6" />
                 <ui:Button Content="重做" Click="OnRedo" Margin="0,0,6,6" />
+                <ui:Button Content="新建主题" Click="OnNewTheme" Margin="0,0,6,6" />
+                <ui:Button Content="另存为" Click="OnSaveAs" Margin="0,0,6,6" />
+                <ui:Button Content="删除主题" Click="OnDeleteTheme" Margin="0,0,6,6" />
                 <ui:Button Content="保存" Appearance="Primary" Click="OnSave" Margin="0,0,0,6" />
             </WrapPanel>
 

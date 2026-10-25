@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
@@ -38,7 +38,7 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
 
         _settings = AppSettings.Load();
         _themes = new ThemeLibrary();
-        _display = new DisplayService(_themes.Directory);
+        _display = new DisplayService(_themes.UserDirectory);
 
         _display.StatusChanged += OnStatusChanged;
         _display.PreviewReady += OnPreviewReady;
@@ -50,7 +50,7 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
 
     private void OnLoaded(object sender, RoutedEventArgs e)
     {
-        ThemeList.ItemsSource = _themes.Themes;
+        RefreshThemeList();
         ThemeDocument? selected = _themes.Find(_settings.ThemeId) ?? _themes.Default;
         ThemeList.SelectedItem = selected;
 
@@ -60,7 +60,7 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
         AutostartCheck.IsChecked = autostart;
         SettingsAutostartCheck.IsChecked = autostart;
 
-        ThemeDirText.Text = _themes.Directory;
+        ThemeDirText.Text = _themes.UserDirectory;
         LogPathText.Text = Log.FilePath;
         ConfigPathText.Text = AppSettings.FilePath;
 
@@ -132,11 +132,35 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
         }
     }
 
+    private void RefreshThemeList()
+    {
+        string? selectedId = (ThemeList.SelectedItem as ThemeDocument)?.Id;
+        ThemeList.ItemsSource = null;
+        ThemeList.ItemsSource = _themes.Themes;
+
+        ThemeDocument? target = _themes.Find(selectedId) ?? _themes.Default;
+        ThemeList.SelectedItem = target;
+    }
+
+    /// <summary>Called by the editor after creating/saving/deleting a user theme.</summary>
+    private void OnThemesChanged()
+    {
+        _themes.Reload();
+        RefreshThemeList();
+        ThemeDirText.Text = _themes.UserDirectory;
+
+        if (ThemeList.SelectedItem is ThemeDocument theme
+            && EditorPanel.Visibility == Visibility.Visible)
+        {
+            _editor?.RefreshThemes();
+        }
+    }
+
     private void OpenEditor()
     {
         if (_editor is null)
         {
-            _editor = new Editor.EditorView(_display, _themes);
+            _editor = new Editor.EditorView(_display, _themes, OnThemesChanged);
             EditorPanel.Content = _editor;
         }
 

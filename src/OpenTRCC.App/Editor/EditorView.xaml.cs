@@ -1,8 +1,9 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -47,8 +48,11 @@ public partial class EditorView : UserControl
     private IBackgroundFrameProvider? _backgroundFrames;
     private IDisposable? _backgroundDisposable;
 
-    public EditorView(DisplayService display, ThemeLibrary themes)
+    private readonly Action? _themesChanged;
+
+    public EditorView(DisplayService display, ThemeLibrary themes, Action? themesChanged = null)
     {
+        _themesChanged = themesChanged;
         InitializeComponent();
 
         _display = display;
@@ -85,9 +89,7 @@ public partial class EditorView : UserControl
         _redo.Clear();
         _selected = null;
 
-        _syncing = true;
-        ThemePicker.SelectedItem = _themes.Find(theme.Id) ?? theme;
-        _syncing = false;
+        RefreshThemes();
 
         SyncBackground();
         RefreshLayerList();
@@ -214,6 +216,11 @@ public partial class EditorView : UserControl
             value => SetBackground(b => b with { Fit = value }));
 
         AddField(
+            "缩放（1 = 铺满，越大越裁切）",
+            background.Zoom.ToString("0.##"),
+            value => SetBackground(b => b with { Zoom = Math.Clamp(ParseNumber(value, b.Zoom), 0.2, 4) }));
+
+        AddField(
             "暗化 (0-1)",
             background.Dim.ToString("0.##"),
             value => SetBackground(b => b with { Dim = Math.Clamp(ParseNumber(value, b.Dim), 0, 1) }));
@@ -232,7 +239,7 @@ public partial class EditorView : UserControl
         {
             var progress = new Progress<double>(window.Report);
             string meta = await VideoFrameExtractor.ExtractAsync(path, _themes.Directory, progress);
-            SetBackground(b => b with { Kind = BackgroundKind.Image, Asset = meta });
+            SetBackground(b => b with { Kind = BackgroundKind.Image, Asset = meta, Fit = "cover", Zoom = 1 });
             EditorStatus.Text = $"视频已转成帧序列：{Path.GetFileName(Path.GetDirectoryName(meta))}";
         }
         catch (Exception ex)
@@ -499,6 +506,12 @@ public partial class EditorView : UserControl
 
         AddHeader($"图层 · {layer.Id}");
 
+        // Text gets the friendly composer first: that is what users actually edit.
+        if (layer is TextLayer textLayer)
+        {
+            BuildTextComposer(textLayer);
+        }
+
         AddField("X", layer.X.ToString("0"), value => UpdateLayer(l => l with { X = ParseNumber(value, l.X) }));
         AddField("Y", layer.Y.ToString("0"), value => UpdateLayer(l => l with { Y = ParseNumber(value, l.Y) }));
         AddField("宽", layer.W.ToString("0"), value => UpdateLayer(l => l with { W = Math.Max(1, ParseNumber(value, l.W)) }));
@@ -508,7 +521,6 @@ public partial class EditorView : UserControl
         switch (layer)
         {
             case TextLayer text:
-                AddField("文本", text.Text, value => UpdateLayer(l => l is TextLayer t ? (Layer)(t with { Text = value }) : l), isBinding: true);
                 AddField("字号", text.Font.Size.ToString("0"), value => UpdateLayer(l => l is TextLayer t ? (Layer)(t with { Font = t.Font with { Size = Math.Max(4, ParseNumber(value, t.Font.Size)) } }) : l));
                 AddField("颜色", text.Color, value => UpdateLayer(l => l is TextLayer t ? (Layer)(t with { Color = value }) : l));
                 AddChoice("对齐", new[] { "left", "center", "right" }, text.Align, value => UpdateLayer(l => l is TextLayer t ? (Layer)(t with { Align = value }) : l));
@@ -516,7 +528,7 @@ public partial class EditorView : UserControl
                 break;
 
             case BarLayer bar:
-                AddField("值", bar.Value, value => UpdateLayer(l => l is BarLayer b ? (Layer)(b with { Value = value }) : l), isBinding: true);
+                AddSensorField("值", bar.Value, value => UpdateLayer(l => l is BarLayer b ? (Layer)(b with { Value = value }) : l));
                 AddField("最小", bar.Min.ToString("0.##"), value => UpdateLayer(l => l is BarLayer b ? (Layer)(b with { Min = ParseNumber(value, b.Min) }) : l));
                 AddField("最大", bar.Max.ToString("0.##"), value => UpdateLayer(l => l is BarLayer b ? (Layer)(b with { Max = ParseNumber(value, b.Max) }) : l));
                 AddField("填充色", bar.Fill, value => UpdateLayer(l => l is BarLayer b ? (Layer)(b with { Fill = value }) : l));
@@ -526,7 +538,7 @@ public partial class EditorView : UserControl
                 break;
 
             case RingLayer ring:
-                AddField("值", ring.Value, value => UpdateLayer(l => l is RingLayer r ? (Layer)(r with { Value = value }) : l), isBinding: true);
+                AddSensorField("值", ring.Value, value => UpdateLayer(l => l is RingLayer r ? (Layer)(r with { Value = value }) : l));
                 AddField("最小", ring.Min.ToString("0.##"), value => UpdateLayer(l => l is RingLayer r ? (Layer)(r with { Min = ParseNumber(value, r.Min) }) : l));
                 AddField("最大", ring.Max.ToString("0.##"), value => UpdateLayer(l => l is RingLayer r ? (Layer)(r with { Max = ParseNumber(value, r.Max) }) : l));
                 AddField("粗细", ring.Thickness.ToString("0"), value => UpdateLayer(l => l is RingLayer r ? (Layer)(r with { Thickness = Math.Max(1, ParseNumber(value, r.Thickness)) }) : l));
@@ -535,7 +547,7 @@ public partial class EditorView : UserControl
                 break;
 
             case SparklineLayer spark:
-                AddField("来源", spark.Source, value => UpdateLayer(l => l is SparklineLayer s ? (Layer)(s with { Source = value }) : l), isBinding: true);
+                AddSensorField("来源", spark.Source, value => UpdateLayer(l => l is SparklineLayer s ? (Layer)(s with { Source = value }) : l));
                 AddField("采样数", spark.Samples.ToString(), value => UpdateLayer(l => l is SparklineLayer s ? (Layer)(s with { Samples = (int)Math.Max(2, ParseNumber(value, s.Samples)) }) : l));
                 AddField("最小", spark.Min.ToString("0.##"), value => UpdateLayer(l => l is SparklineLayer s ? (Layer)(s with { Min = ParseNumber(value, s.Min) }) : l));
                 AddField("最大", spark.Max.ToString("0.##"), value => UpdateLayer(l => l is SparklineLayer s ? (Layer)(s with { Max = ParseNumber(value, s.Max) }) : l));
@@ -548,9 +560,256 @@ public partial class EditorView : UserControl
                 break;
         }
 
-        AddBindingPicker();
     }
 
+    private IReadOnlyList<SensorDescriptor>? _choiceList;
+
+    private IReadOnlyList<SensorDescriptor> SensorChoices => _choiceList ??= BuildChoices();
+
+    private List<SensorDescriptor> BuildChoices()
+    {
+        var list = new List<SensorDescriptor>
+        {
+            new("time", "当前时间", string.Empty, "builtin", "时间"),
+            new("date", "日期", string.Empty, "builtin", "时间"),
+        };
+
+        list.AddRange(_display.Descriptors);
+        return list;
+    }
+
+    private sealed class TextSegment
+    {
+        public bool IsBinding { get; init; }
+
+        public string Text { get; set; } = string.Empty;
+
+        public string Id { get; set; } = string.Empty;
+
+        public string Format { get; set; } = string.Empty;
+    }
+
+    private static readonly Regex BindingPattern = new(@"\{([^}:]+)(?::([^}]*))?\}", RegexOptions.Compiled);
+
+    private static List<TextSegment> ParseTemplate(string template)
+    {
+        var segments = new List<TextSegment>();
+        int position = 0;
+
+        foreach (Match match in BindingPattern.Matches(template))
+        {
+            if (match.Index > position)
+            {
+                segments.Add(new TextSegment { Text = template[position..match.Index] });
+            }
+
+            segments.Add(new TextSegment
+            {
+                IsBinding = true,
+                Id = match.Groups[1].Value,
+                Format = match.Groups[2].Value,
+            });
+
+            position = match.Index + match.Length;
+        }
+
+        if (position < template.Length)
+        {
+            segments.Add(new TextSegment { Text = template[position..] });
+        }
+
+        if (segments.Count == 0)
+        {
+            segments.Add(new TextSegment { Text = string.Empty });
+        }
+
+        return segments;
+    }
+
+    private static string ComposeTemplate(IEnumerable<TextSegment> segments)
+        => string.Concat(segments.Select(s => s.IsBinding
+            ? (s.Format.Length > 0 ? $"{{{s.Id}:{s.Format}}}" : $"{{{s.Id}}}")
+            : s.Text));
+
+    /// <summary>Friendly text editor: literal pieces plus sensor chips, never raw braces.</summary>
+    private void BuildTextComposer(TextLayer layer)
+    {
+        AddHeader("显示文字");
+        var segments = ParseTemplate(layer.Text);
+
+        for (int index = 0; index < segments.Count; index++)
+        {
+            TextSegment segment = segments[index];
+            int captured = index;
+
+            var row = new StackPanel
+            {
+                Orientation = Orientation.Horizontal,
+                Margin = new Thickness(0, 0, 0, 6),
+            };
+
+            if (segment.IsBinding)
+            {
+                var combo = new ComboBox
+                {
+                    ItemsSource = SensorChoices,
+                    DisplayMemberPath = "Name",
+                    Width = 180,
+                    Margin = new Thickness(0, 0, 6, 0),
+                };
+                combo.SelectedItem = SensorChoices.FirstOrDefault(d => d.Id == segment.Id);
+                combo.SelectionChanged += (_, _) =>
+                {
+                    if (combo.SelectedItem is SensorDescriptor descriptor)
+                    {
+                        segments[captured].Id = descriptor.Id;
+                    }
+                };
+
+                var format = new TextBox
+                {
+                    Text = segment.Format,
+                    Width = 56,
+                    Margin = new Thickness(0, 0, 6, 0),
+                    ToolTip = "数字格式，例如 0 / 0.0 / 0%",
+                };
+                format.TextChanged += (_, _) => segments[captured].Format = format.Text;
+
+                row.Children.Add(combo);
+                row.Children.Add(format);
+            }
+            else
+            {
+                var box = new TextBox
+                {
+                    Text = segment.Text,
+                    Width = 242,
+                    Margin = new Thickness(0, 0, 6, 0),
+                };
+                box.TextChanged += (_, _) => segments[captured].Text = box.Text;
+                row.Children.Add(box);
+            }
+
+            var remove = new Wpf.Ui.Controls.Button
+            {
+                Content = "×",
+                Width = 32,
+                Padding = new Thickness(0),
+            };
+            remove.Click += (_, _) =>
+            {
+                segments.RemoveAt(captured);
+                if (segments.Count == 0)
+                {
+                    segments.Add(new TextSegment { Text = string.Empty });
+                }
+
+                ApplyText(segments);
+            };
+
+            row.Children.Add(remove);
+            PropsPanel.Children.Add(row);
+        }
+
+        var actions = new StackPanel
+        {
+            Orientation = Orientation.Horizontal,
+            Margin = new Thickness(0, 2, 0, 4),
+        };
+
+        var addText = new Wpf.Ui.Controls.Button { Content = "＋文字", Margin = new Thickness(0, 0, 6, 0) };
+        addText.Click += (_, _) =>
+        {
+            segments.Add(new TextSegment { Text = "新文字" });
+            ApplyText(segments);
+        };
+
+        var addSensor = new Wpf.Ui.Controls.Button { Content = "＋传感器", Margin = new Thickness(0, 0, 6, 0) };
+        addSensor.Click += (_, _) =>
+        {
+            SensorDescriptor? first = _display.Descriptors.FirstOrDefault();
+            if (first is not null)
+            {
+                segments.Add(new TextSegment { IsBinding = true, Id = first.Id });
+                ApplyText(segments);
+            }
+        };
+
+        var apply = new Wpf.Ui.Controls.Button { Content = "应用", Appearance = Wpf.Ui.Controls.ControlAppearance.Primary };
+        apply.Click += (_, _) => ApplyText(segments);
+
+        actions.Children.Add(addText);
+        actions.Children.Add(addSensor);
+        actions.Children.Add(apply);
+        PropsPanel.Children.Add(actions);
+
+        PropsPanel.Children.Add(new TextBlock
+        {
+            Text = "每一行是一段文字或一个传感器；格式只对传感器生效。",
+            FontSize = 10,
+            Foreground = (Brush)FindResource("TextSecondary"),
+            TextWrapping = TextWrapping.Wrap,
+            Margin = new Thickness(2, 0, 2, 8),
+        });
+    }
+
+    private void ApplyText(List<TextSegment> segments)
+    {
+        string template = ComposeTemplate(segments);
+        UpdateLayer(l => l is TextLayer t ? (Layer)(t with { Text = template }) : l);
+    }
+
+    /// <summary>Sensor picker for numeric layers (bar/ring/sparkline), with an optional format.</summary>
+    private void AddSensorField(string label, string value, Action<string> apply)
+    {
+        Match match = BindingPattern.Match(value);
+        string id = match.Success ? match.Groups[1].Value : string.Empty;
+        string format = match.Success ? match.Groups[2].Value : string.Empty;
+
+        var panel = new StackPanel { Margin = new Thickness(0, 0, 0, 8) };
+        panel.Children.Add(new TextBlock
+        {
+            Text = label,
+            FontSize = 10,
+            Foreground = (Brush)FindResource("TextSecondary"),
+            Margin = new Thickness(2, 0, 0, 3),
+        });
+
+        var row = new StackPanel { Orientation = Orientation.Horizontal };
+        var combo = new ComboBox
+        {
+            ItemsSource = SensorChoices,
+            DisplayMemberPath = "Name",
+            Width = 180,
+            Margin = new Thickness(0, 0, 6, 0),
+        };
+        combo.SelectedItem = SensorChoices.FirstOrDefault(d => d.Id == id);
+
+        var formatBox = new TextBox
+        {
+            Text = format,
+            Width = 56,
+            ToolTip = "数字格式，例如 0 / 0.0",
+        };
+
+        void Push()
+        {
+            if (combo.SelectedItem is SensorDescriptor descriptor)
+            {
+                apply(formatBox.Text.Length > 0
+                    ? $"{{{descriptor.Id}:{formatBox.Text}}}"
+                    : $"{{{descriptor.Id}}}");
+            }
+        }
+
+        combo.SelectionChanged += (_, _) => Push();
+        formatBox.LostFocus += (_, _) => Push();
+
+        row.Children.Add(combo);
+        row.Children.Add(formatBox);
+        panel.Children.Add(row);
+        PropsPanel.Children.Add(panel);
+    }
     private void AddHeader(string text)
     {
         PropsPanel.Children.Add(new TextBlock
@@ -757,10 +1016,105 @@ public partial class EditorView : UserControl
 
     private void OnSave(object sender, RoutedEventArgs e)
     {
-        string path = Path.Combine(_themes.Directory, _theme.Id + ".json");
-        ThemeJson.Save(path, _theme);
-        EditorStatus.Text = $"已保存：{path}";
-        Log.Write($"editor saved {path}");
+        _themes.Save(_theme);
+        EditorStatus.Text = $"已保存到用户主题：{_themes.PathFor(_theme)}";
+        Log.Write($"editor saved {_themes.PathFor(_theme)}");
+    }
+
+    /// <summary>Rebuilds the theme picker after the catalog changed.</summary>
+    public void RefreshThemes()
+    {
+        _syncing = true;
+        ThemePicker.Items.Clear();
+        foreach (ThemeDocument theme in _themes.Themes)
+        {
+            ThemePicker.Items.Add(theme);
+        }
+
+        ThemePicker.SelectedItem = _themes.Find(_theme.Id) ?? _theme;
+        _syncing = false;
+    }
+
+    private void OnNewTheme(object sender, RoutedEventArgs e)
+    {
+        string? name = TextInputDialog.Show(
+            Window.GetWindow(this), "新建主题", "主题名称", "我的主题");
+        if (string.IsNullOrWhiteSpace(name))
+        {
+            return;
+        }
+
+        var theme = new ThemeDocument
+        {
+            Id = _themes.NewId(name),
+            Name = name.Trim(),
+            Canvas = new ThemeCanvas
+            {
+                Background = new ThemeBackground
+                {
+                    Kind = BackgroundKind.Solid,
+                    Colors = new[] { "#0B1020" },
+                },
+            },
+        };
+
+        _themes.Save(theme);
+        _themes.Reload();
+        _themesChanged?.Invoke();
+        LoadTheme(theme);
+        EditorStatus.Text = $"已创建：{theme.Name}（{_themes.PathFor(theme)}）";
+    }
+
+    private void OnSaveAs(object sender, RoutedEventArgs e)
+    {
+        string? name = TextInputDialog.Show(
+            Window.GetWindow(this), "另存为主题", "主题名称", _theme.Name + " 副本");
+        if (string.IsNullOrWhiteSpace(name))
+        {
+            return;
+        }
+
+        ThemeDocument copy = _theme with
+        {
+            Id = _themes.NewId(name),
+            Name = name.Trim(),
+        };
+
+        _themes.Save(copy);
+        _themes.Reload();
+        _themesChanged?.Invoke();
+        LoadTheme(copy);
+        EditorStatus.Text = $"已另存为：{copy.Name}";
+    }
+
+    private void OnDeleteTheme(object sender, RoutedEventArgs e)
+    {
+        if (!_themes.IsUserTheme(_theme))
+        {
+            MessageBox.Show(
+                "内置主题不能删除；可以「另存为」后修改自己的副本。",
+                "OpenTRCC",
+                MessageBoxButton.OK,
+                MessageBoxImage.Information);
+            return;
+        }
+
+        MessageBoxResult confirm = MessageBox.Show(
+            $"删除主题「{_theme.Name}」？此操作会删掉用户主题目录里的 JSON。",
+            "OpenTRCC",
+            MessageBoxButton.YesNo,
+            MessageBoxImage.Warning);
+
+        if (confirm != MessageBoxResult.Yes)
+        {
+            return;
+        }
+
+        _themes.Delete(_theme);
+        _themes.Reload();
+        _themesChanged?.Invoke();
+        LoadTheme(_themes.Default);
+        EditorStatus.Text = "主题已删除";
     }
 
     // ── 渲染 ────────────────────────────────────────────────────────
