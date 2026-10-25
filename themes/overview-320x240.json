@@ -16,80 +16,91 @@
     {
       "type": "text",
       "id": "cpu-label",
-      "x": 16, "y": 16, "w": 132, "h": 14,
-      "text": "CPU 占用",
+      "x": 0, "y": 2, "w": 150, "h": 14,
+      "text": "CPU",
       "font": { "family": "Microsoft YaHei UI", "size": 10, "weight": 600 },
-      "color": "#94A3B8"
+      "color": "#94A3B8",
+      "align": "center"
+    },
+    {
+      "type": "ring",
+      "id": "cpu-ring",
+      "x": 20, "y": 16, "w": 110, "h": 110,
+      "value": "{cpu.load.total}",
+      "min": 0, "max": 100,
+      "thickness": 9,
+      "track": "#1E293B",
+      "fill": ["#2DD4BF"],
+      "startAngle": 135,
+      "sweepAngle": 270,
+      "cap": "round"
     },
     {
       "type": "text",
       "id": "cpu-value",
-      "x": 16, "y": 28, "w": 132, "h": 38,
+      "x": 20, "y": 16, "w": 110, "h": 110,
       "text": "{cpu.load.total:0}%",
-      "font": { "family": "Consolas", "size": 28, "weight": 700 },
-      "color": "#E2E8F0"
+      "font": { "family": "Consolas", "size": 24, "weight": 700 },
+      "color": "#E2E8F0",
+      "align": "center",
+      "verticalAlign": "middle"
     },
     {
       "type": "text",
       "id": "cpu-temp",
-      "x": 16, "y": 66, "w": 132, "h": 16,
-      "text": "温度 {cpu.temp.package:0}°",
+      "x": 0, "y": 132, "w": 150, "h": 16,
+      "text": "{cpu.temp.package:0}°",
       "font": { "family": "Microsoft YaHei UI", "size": 10, "weight": 500 },
-      "color": "#F59E0B"
-    },
-    {
-      "type": "bar",
-      "id": "cpu-bar",
-      "x": 16, "y": 84, "w": 132, "h": 6,
-      "value": "{cpu.load.total}",
-      "min": 0, "max": 100,
-      "track": "#1E293B",
-      "fill": "#2DD4BF",
-      "radius": 3
+      "color": "#F59E0B",
+      "align": "center"
     },
     {
       "type": "text",
       "id": "gpu-label",
-      "x": 172, "y": 16, "w": 132, "h": 14,
-      "text": "GPU 占用",
+      "x": 170, "y": 2, "w": 150, "h": 14,
+      "text": "GPU",
       "font": { "family": "Microsoft YaHei UI", "size": 10, "weight": 600 },
       "color": "#94A3B8",
-      "align": "right"
+      "align": "center"
+    },
+    {
+      "type": "ring",
+      "id": "gpu-ring",
+      "x": 190, "y": 16, "w": 110, "h": 110,
+      "value": "{gpu.load.core}",
+      "min": 0, "max": 100,
+      "thickness": 9,
+      "track": "#1E293B",
+      "fill": ["#A855F7"],
+      "startAngle": 135,
+      "sweepAngle": 270,
+      "cap": "round"
     },
     {
       "type": "text",
       "id": "gpu-value",
-      "x": 172, "y": 28, "w": 132, "h": 38,
+      "x": 190, "y": 16, "w": 110, "h": 110,
       "text": "{gpu.load.core:0}%",
-      "font": { "family": "Consolas", "size": 28, "weight": 700 },
+      "font": { "family": "Consolas", "size": 24, "weight": 700 },
       "color": "#E2E8F0",
-      "align": "right"
+      "align": "center",
+      "verticalAlign": "middle"
     },
     {
       "type": "text",
       "id": "gpu-temp",
-      "x": 172, "y": 66, "w": 132, "h": 16,
-      "text": "温度 {gpu.temp.core:0}°",
+      "x": 170, "y": 132, "w": 150, "h": 16,
+      "text": "{gpu.temp.core:0}°",
       "font": { "family": "Microsoft YaHei UI", "size": 10, "weight": 500 },
       "color": "#F59E0B",
-      "align": "right"
-    },
-    {
-      "type": "bar",
-      "id": "gpu-bar",
-      "x": 172, "y": 84, "w": 132, "h": 6,
-      "value": "{gpu.load.core}",
-      "min": 0, "max": 100,
-      "track": "#1E293B",
-      "fill": "#A855F7",
-      "radius": 3
+      "align": "center"
     },
     {
       "type": "text",
       "id": "fps",
-      "x": 0, "y": 98, "w": 320, "h": 62,
+      "x": 0, "y": 156, "w": 320, "h": 46,
       "text": "{fps.current:0}",
-      "font": { "family": "Consolas", "size": 52, "weight": 700 },
+      "font": { "family": "Consolas", "size": 38, "weight": 700 },
       "color": "#2DD4BF",
       "align": "center",
       "verticalAlign": "middle",
@@ -98,29 +109,21 @@
     {
       "type": "text",
       "id": "fps-label",
-      "x": 0, "y": 158, "w": 320, "h": 16,
-      "text": "FPS · 1% {fps.low1:0}",
+      "x": 0, "y": 202, "w": 320, "h": 16,
+      "text": "FPS · 1% {fps.low1:0} · 内存 {mem.load:0}%",
       "font": { "family": "Microsoft YaHei UI", "size": 10, "weight": 600 },
       "color": "#94A3B8",
       "align": "center"
     },
     {
-      "type": "text",
-      "id": "mem-label",
-      "x": 16, "y": 190, "w": 180, "h": 16,
-      "text": "内存占用 {mem.load:0}%",
-      "font": { "family": "Microsoft YaHei UI", "size": 10, "weight": 600 },
-      "color": "#94A3B8"
-    },
-    {
       "type": "bar",
       "id": "mem-bar",
-      "x": 16, "y": 208, "w": 288, "h": 8,
+      "x": 20, "y": 224, "w": 280, "h": 6,
       "value": "{mem.load}",
       "min": 0, "max": 100,
       "track": "#1E293B",
       "fill": "#22D3EE",
-      "radius": 4
+      "radius": 3
     }
   ]
 }

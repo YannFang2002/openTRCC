@@ -176,6 +176,12 @@
 
                         <CheckBox x:Name="SettingsAutostartCheck" Content="开机自启（HKCU）" Margin="2,18,0,0"
                                   Click="OnSettingsAutostartClick" />
+
+                        <Button Content="以管理员身份重启（读取 CPU 温度）" HorizontalAlignment="Left"
+                                Margin="0,14,0,0" Click="OnRestartAsAdminClick" />
+                        <TextBlock Text="CPU 温度/功耗由 LibreHardwareMonitor 通过内核驱动读取，需要管理员权限；普通权限只能读到 GPU 温度。"
+                                   Foreground="{StaticResource TextSecondary}" FontSize="11" TextWrapping="Wrap"
+                                   Margin="2,8,0,0" MaxWidth="620" />
                     </StackPanel>
                 </ScrollViewer>
 

@@ -558,6 +558,31 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
         _tray.DoubleClick += (_, _) => RestoreWindow();
     }
 
+    private void OnRestartAsAdminClick(object sender, RoutedEventArgs e)
+    {
+        try
+        {
+            var info = new ProcessStartInfo
+            {
+                FileName = Environment.ProcessPath ?? "OpenTRCC.exe",
+                UseShellExecute = true,
+                Verb = "runas",
+                Arguments = "--page settings",
+            };
+
+            Process.Start(info);
+            ExitApplication();
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show(
+                $"提权失败或被取消：{ex.Message}",
+                "OpenTRCC",
+                MessageBoxButton.OK,
+                MessageBoxImage.Warning);
+        }
+    }
+
     private void RestoreWindow()
     {
         Show();
