@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
 Builds a Windows x64 release of OpenTRCC and zips it for distribution.
 
@@ -57,6 +57,14 @@ Write-Host "publishing OpenTRCC $Version ($Runtime)..." -ForegroundColor Cyan
 & $dotnet @arguments
 if ($LASTEXITCODE -ne 0) {
     throw "dotnet publish failed with exit code $LASTEXITCODE"
+}
+
+# PublishSingleFile drops loose .exe content; copy the bundled tools explicitly.
+$presentmon = Join-Path $root "third_party\presentmon"
+if (Test-Path $presentmon) {
+    $target = Join-Path $out "third_party\presentmon"
+    New-Item -ItemType Directory -Force -Path $target | Out-Null
+    Copy-Item (Join-Path $presentmon "*") -Destination $target -Recurse -Force
 }
 
 if (Test-Path $zip) {

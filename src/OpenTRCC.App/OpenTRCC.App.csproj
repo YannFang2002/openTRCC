@@ -35,6 +35,13 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Content Include="..\..\third_party\presentmon\**\*"
+             Link="third_party\presentmon\%(RecursiveDir)%(Filename)%(Extension)"
+             CopyToOutputDirectory="PreserveNewest"
+             CopyToPublishDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Content Include="..\..\themes\*.json" Link="themes\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
