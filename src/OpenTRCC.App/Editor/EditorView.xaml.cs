@@ -201,7 +201,7 @@ public partial class EditorView : UserControl
         for (int index = 0; index < count; index++)
         {
             int captured = index;
-            AddField(
+            AddColorField(
                 $"颜色 {index + 1}",
                 background.Colors.Skip(index).FirstOrDefault() ?? fallback[Math.Min(index, fallback.Length - 1)],
                 value => SetBackground(b => b with { Colors = WithColor(b.Colors, captured, value) }));
@@ -653,7 +653,7 @@ public partial class EditorView : UserControl
         {
             case TextLayer text:
                 AddField("字号", text.Font.Size.ToString("0"), value => UpdateLayer(l => l is TextLayer t ? (Layer)(t with { Font = t.Font with { Size = Math.Max(4, ParseNumber(value, t.Font.Size)) } }) : l));
-                AddField("颜色", text.Color, value => UpdateLayer(l => l is TextLayer t ? (Layer)(t with { Color = value }) : l));
+                AddColorField("颜色", text.Color, value => UpdateLayer(l => l is TextLayer t ? (Layer)(t with { Color = value }) : l));
                 AddChoice("对齐", new[] { "left", "center", "right" }, text.Align, value => UpdateLayer(l => l is TextLayer t ? (Layer)(t with { Align = value }) : l), display: value => Label(AlignNames, value));
                 AddChoice("垂直", new[] { "top", "middle", "bottom" }, text.VerticalAlign, value => UpdateLayer(l => l is TextLayer t ? (Layer)(t with { VerticalAlign = value }) : l), display: value => Label(VerticalNames, value));
                 break;
@@ -662,8 +662,8 @@ public partial class EditorView : UserControl
                 AddSensorField("值", bar.Value, value => UpdateLayer(l => l is BarLayer b ? (Layer)(b with { Value = value }) : l));
                 AddField("最小", bar.Min.ToString("0.##"), value => UpdateLayer(l => l is BarLayer b ? (Layer)(b with { Min = ParseNumber(value, b.Min) }) : l));
                 AddField("最大", bar.Max.ToString("0.##"), value => UpdateLayer(l => l is BarLayer b ? (Layer)(b with { Max = ParseNumber(value, b.Max) }) : l));
-                AddField("填充色", bar.Fill, value => UpdateLayer(l => l is BarLayer b ? (Layer)(b with { Fill = value }) : l));
-                AddField("轨道色", bar.Track, value => UpdateLayer(l => l is BarLayer b ? (Layer)(b with { Track = value }) : l));
+                AddColorField("填充色", bar.Fill, value => UpdateLayer(l => l is BarLayer b ? (Layer)(b with { Fill = value }) : l));
+                AddColorField("轨道色", bar.Track, value => UpdateLayer(l => l is BarLayer b ? (Layer)(b with { Track = value }) : l));
                 AddField("圆角", bar.Radius.ToString("0"), value => UpdateLayer(l => l is BarLayer b ? (Layer)(b with { Radius = Math.Max(0, ParseNumber(value, b.Radius)) }) : l));
                 AddChoice("方向", new[] { "horizontal", "vertical" }, bar.Orientation, value => UpdateLayer(l => l is BarLayer b ? (Layer)(b with { Orientation = value }) : l), display: value => Label(OrientationNames, value));
                 break;
@@ -673,8 +673,8 @@ public partial class EditorView : UserControl
                 AddField("最小", ring.Min.ToString("0.##"), value => UpdateLayer(l => l is RingLayer r ? (Layer)(r with { Min = ParseNumber(value, r.Min) }) : l));
                 AddField("最大", ring.Max.ToString("0.##"), value => UpdateLayer(l => l is RingLayer r ? (Layer)(r with { Max = ParseNumber(value, r.Max) }) : l));
                 AddField("粗细", ring.Thickness.ToString("0"), value => UpdateLayer(l => l is RingLayer r ? (Layer)(r with { Thickness = Math.Max(1, ParseNumber(value, r.Thickness)) }) : l));
-                AddField("颜色", ring.Fill.FirstOrDefault() ?? "#5EEAD4", value => UpdateLayer(l => l is RingLayer r ? (Layer)(r with { Fill = new[] { value } }) : l));
-                AddField("轨道色", ring.Track, value => UpdateLayer(l => l is RingLayer r ? (Layer)(r with { Track = value }) : l));
+                AddColorField("颜色", ring.Fill.FirstOrDefault() ?? "#5EEAD4", value => UpdateLayer(l => l is RingLayer r ? (Layer)(r with { Fill = new[] { value } }) : l));
+                AddColorField("轨道色", ring.Track, value => UpdateLayer(l => l is RingLayer r ? (Layer)(r with { Track = value }) : l));
                 break;
 
             case SparklineLayer spark:
@@ -682,7 +682,7 @@ public partial class EditorView : UserControl
                 AddField("采样数", spark.Samples.ToString(), value => UpdateLayer(l => l is SparklineLayer s ? (Layer)(s with { Samples = (int)Math.Max(2, ParseNumber(value, s.Samples)) }) : l));
                 AddField("最小", spark.Min.ToString("0.##"), value => UpdateLayer(l => l is SparklineLayer s ? (Layer)(s with { Min = ParseNumber(value, s.Min) }) : l));
                 AddField("最大", spark.Max.ToString("0.##"), value => UpdateLayer(l => l is SparklineLayer s ? (Layer)(s with { Max = ParseNumber(value, s.Max) }) : l));
-                AddField("颜色", spark.Stroke, value => UpdateLayer(l => l is SparklineLayer s ? (Layer)(s with { Stroke = value }) : l));
+                AddColorField("颜色", spark.Stroke, value => UpdateLayer(l => l is SparklineLayer s ? (Layer)(s with { Stroke = value }) : l));
                 break;
 
             case ImageLayer image:
@@ -1018,6 +1018,84 @@ public partial class EditorView : UserControl
         PropsPanel.Children.Add(panel);
     }
 
+    private void AddColorField(string label, string value, Action<string> apply)
+    {
+        var panel = new StackPanel { Margin = new Thickness(0, 0, 0, 8) };
+        panel.Children.Add(new TextBlock
+        {
+            Text = label,
+            FontSize = 10,
+            Foreground = (Brush)FindResource("TextSecondary"),
+            Margin = new Thickness(2, 0, 0, 3),
+        });
+
+        var row = new StackPanel { Orientation = Orientation.Horizontal };
+        var swatch = new Wpf.Ui.Controls.Button
+        {
+            Width = 34,
+            Height = 30,
+            Padding = new Thickness(0),
+            Margin = new Thickness(0, 0, 6, 0),
+            Background = ToBrush(value),
+            ToolTip = "点击选择颜色",
+        };
+
+        var box = new TextBox
+        {
+            Text = value,
+            Width = 110,
+            FontFamily = new FontFamily("Consolas"),
+        };
+
+        swatch.Click += (_, _) =>
+        {
+            using var dialog = new System.Windows.Forms.ColorDialog
+            {
+                FullOpen = true,
+                Color = ToDrawingColor(value),
+            };
+
+            if (dialog.ShowDialog() != System.Windows.Forms.DialogResult.OK)
+            {
+                return;
+            }
+
+            apply($"#{dialog.Color.R:X2}{dialog.Color.G:X2}{dialog.Color.B:X2}");
+        };
+
+        box.LostFocus += (_, _) => apply(box.Text);
+        box.KeyDown += (_, e) =>
+        {
+            if (e.Key == Key.Enter)
+            {
+                apply(box.Text);
+                e.Handled = true;
+            }
+        };
+
+        row.Children.Add(swatch);
+        row.Children.Add(box);
+        panel.Children.Add(row);
+        PropsPanel.Children.Add(panel);
+    }
+
+    private static System.Drawing.Color ToDrawingColor(string hex)
+    {
+        try
+        {
+            return System.Drawing.ColorTranslator.FromHtml(hex);
+        }
+        catch (Exception)
+        {
+            return System.Drawing.Color.White;
+        }
+    }
+
+    private static Brush ToBrush(string hex)
+    {
+        System.Drawing.Color color = ToDrawingColor(hex);
+        return new SolidColorBrush(Color.FromRgb(color.R, color.G, color.B));
+    }
     private void AddChoice(
         string label,
         string[] items,
