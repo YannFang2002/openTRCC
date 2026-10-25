@@ -243,6 +243,7 @@ public partial class EditorView : UserControl
         };
 
         PropsPanel.Children.Add(pick);
+        AddNudgePad();
 
         AddChoice(
             "适应",
@@ -266,8 +267,6 @@ public partial class EditorView : UserControl
             background.OffsetY.ToString("0"),
             value => SetBackground(b => b with { OffsetY = ParseNumber(value, b.OffsetY) }));
 
-        AddNudgePad();
-
         AddField(
             "暗化 (0-1)",
             background.Dim.ToString("0.##"),
@@ -290,6 +289,8 @@ public partial class EditorView : UserControl
         AddNudge(grid, "←", 1, 0, -1);
         AddNudge(grid, "→", 1, 2, 0);
         AddNudge(grid, "↓", 2, 1, -1);
+
+        PropsPanel.Children.Add(grid);
     }
 
     private void AddNudge(Grid grid, string label, int row, int column, int delta)
@@ -803,7 +804,6 @@ public partial class EditorView : UserControl
         for (int index = 0; index < segments.Count; index++)
         {
             TextSegment segment = segments[index];
-            int captured = index;
 
             var row = new StackPanel
             {
@@ -825,7 +825,7 @@ public partial class EditorView : UserControl
                 {
                     if (combo.SelectedItem is SensorDescriptor descriptor)
                     {
-                        segments[captured].Id = descriptor.Id;
+                        segment.Id = descriptor.Id;
                     }
                 };
 
@@ -836,7 +836,7 @@ public partial class EditorView : UserControl
                     Margin = new Thickness(0, 0, 6, 0),
                     ToolTip = "数字格式，例如 0 / 0.0 / 0%",
                 };
-                format.TextChanged += (_, _) => segments[captured].Format = format.Text;
+                format.TextChanged += (_, _) => segment.Format = format.Text;
 
                 row.Children.Add(combo);
                 row.Children.Add(format);
@@ -849,7 +849,7 @@ public partial class EditorView : UserControl
                     Width = 242,
                     Margin = new Thickness(0, 0, 6, 0),
                 };
-                box.TextChanged += (_, _) => segments[captured].Text = box.Text;
+                box.TextChanged += (_, _) => segment.Text = box.Text;
                 row.Children.Add(box);
             }
 
@@ -861,7 +861,7 @@ public partial class EditorView : UserControl
             };
             remove.Click += (_, _) =>
             {
-                segments.RemoveAt(captured);
+                segments.Remove(segment);
                 if (segments.Count == 0)
                 {
                     segments.Add(new TextSegment { Text = string.Empty });

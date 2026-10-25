@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
@@ -26,6 +26,7 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
     private readonly ObservableCollection<SensorRow> _visibleSensors = new();
     private WriteableBitmap? _preview;
     private Editor.EditorView? _editor;
+    private bool _initializing;
     private Forms.NotifyIcon? _tray;
     private bool _exitRequested;
     private bool _trayHintShown;
@@ -50,6 +51,7 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
 
     private void OnLoaded(object sender, RoutedEventArgs e)
     {
+        _initializing = true;
         RefreshThemeList();
         ThemeDocument? selected = _themes.Find(_settings.ThemeId) ?? _themes.Default;
         ThemeList.SelectedItem = selected;
@@ -72,6 +74,8 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
 
         CreateTrayIcon();
         NavList.SelectedIndex = PageFromCommandLine();
+
+        _initializing = false;
 
         if (_settings.StartStreamingOnLaunch && selected is not null)
         {
@@ -134,6 +138,11 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
 
     private void RefreshThemeList()
     {
+        foreach (string error in _themes.Errors)
+        {
+            Log.Write($"theme load failed: {error}");
+        }
+
         string? selectedId = (ThemeList.SelectedItem as ThemeDocument)?.Id;
         ThemeList.ItemsSource = null;
         ThemeList.ItemsSource = _themes.Themes;
@@ -199,7 +208,7 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
 
     private void OnThemeChanged(object sender, SelectionChangedEventArgs e)
     {
-        if (ThemeList.SelectedItem is not ThemeDocument theme)
+        if (_initializing || ThemeList.SelectedItem is not ThemeDocument theme)
         {
             return;
         }

@@ -10,7 +10,7 @@
 ## 现在能做什么
 
 - **屏幕**：HID 通道直连（513 字节报告），RGB565 全帧 320×240，实测 23.2fps 上限、实际推流约 21fps
-- **主题**：`themes/*.json`（内置 11 套），text / bar / ring / sparkline / image 五类图层；背景支持纯色/渐变/图片/GIF/视频/**程序化动态**（aurora / waves / particles / stars / grid / plasma / rain / ronin / sprinter）
+- **主题**：`themes/*.json`（内置 12 套），text / bar / ring / sparkline / image 五类图层；背景支持纯色/渐变/图片/GIF/视频/**程序化动态**（aurora / waves / particles / stars / grid / plasma / rain / ronin / sprinter）
 - **数据**：系统计数器、LibreHardwareMonitor（**全量传感器，实测 313 个**：逐核温度/占用、GPU、主板、内存、风扇…）、PresentMon 2.6.0（任意应用 FPS + 1% low）
 - **编辑器**：2× 画布、拖拽移动、图层增删、分类型属性、传感器绑定、撤销/重做、保存即上屏；背景支持纯色/渐变/图片/**GIF/视频**（视频导入时转成 320×240 JPEG 帧序列，播放只解 JPEG）——概览（实时预览/主题/启停）、传感器（全量列表 + 搜索）、设置（来源状态/路径/自启/诊断）、日志（实时 tail）；托盘常驻、单实例、HKCU 自启
 - **诊断**：`OpenTRCC.Probe` 命令行（握手 / 测试图 / bench / 渲染 / 传感器）
