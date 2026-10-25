@@ -42,6 +42,10 @@ public partial class EditorView : UserControl
     private double _dragOriginX;
     private double _dragOriginY;
     private bool _dragging;
+    private bool _panningBackground;
+    private Point _panStart;
+    private double _panOriginX;
+    private double _panOriginY;
     private bool _syncing;
     private TextBox? _bindTarget;
     private Action<string>? _bindApply;
@@ -147,13 +151,15 @@ public partial class EditorView : UserControl
                     "procedural" => BackgroundKind.Procedural,
                     _ => BackgroundKind.Solid,
                 },
-            }));
+            }),
+            display: value => Label(KindNames, value));
 
         AddChoice(
             "动态预设",
             ProceduralBackgrounds.Presets,
             background.Preset,
-            value => SetBackground(b => b with { Kind = BackgroundKind.Procedural, Preset = value }));
+            value => SetBackground(b => b with { Kind = BackgroundKind.Procedural, Preset = value }),
+            display: value => Label(PresetNames, value));
 
         AddField(
             "动态速度",
@@ -213,12 +219,23 @@ public partial class EditorView : UserControl
             "适应",
             new[] { "cover", "contain", "stretch" },
             background.Fit,
-            value => SetBackground(b => b with { Fit = value }));
+            value => SetBackground(b => b with { Fit = value }),
+            display: value => Label(FitNames, value));
 
         AddField(
             "缩放（1 = 铺满，越大越裁切）",
             background.Zoom.ToString("0.##"),
             value => SetBackground(b => b with { Zoom = Math.Clamp(ParseNumber(value, b.Zoom), 0.2, 4) }));
+
+        AddField(
+            "水平偏移",
+            background.OffsetX.ToString("0"),
+            value => SetBackground(b => b with { OffsetX = ParseNumber(value, b.OffsetX) }));
+
+        AddField(
+            "垂直偏移",
+            background.OffsetY.ToString("0"),
+            value => SetBackground(b => b with { OffsetY = ParseNumber(value, b.OffsetY) }));
 
         AddField(
             "暗化 (0-1)",
@@ -327,6 +344,18 @@ public partial class EditorView : UserControl
 
         if (hit is null)
         {
+            // Nothing hit: dragging pans the background image/GIF/video.
+            if (_theme.Canvas.Background.Kind == BackgroundKind.Image)
+            {
+                PushUndo();
+                _panningBackground = true;
+                _panStart = point;
+                _panOriginX = _theme.Canvas.Background.OffsetX;
+                _panOriginY = _theme.Canvas.Background.OffsetY;
+                CanvasHost.CaptureMouse();
+                e.Handled = true;
+            }
+
             return;
         }
 
@@ -347,6 +376,24 @@ public partial class EditorView : UserControl
         }
 
         Point point = e.GetPosition(CanvasHost);
+
+        if (_panningBackground)
+        {
+            double offsetX = Math.Round(_panOriginX + (point.X - _panStart.X) / Zoom);
+            double offsetY = Math.Round(_panOriginY + (point.Y - _panStart.Y) / Zoom);
+            _theme = _theme with
+            {
+                Canvas = _theme.Canvas with
+                {
+                    Background = _theme.Canvas.Background with { OffsetX = offsetX, OffsetY = offsetY },
+                },
+            };
+
+            RenderCanvas();
+            CommitToDisplay();
+            return;
+        }
+
         double newX = Math.Round(_dragOriginX + (point.X - _dragStart.X) / Zoom);
         double newY = Math.Round(_dragOriginY + (point.Y - _dragStart.Y) / Zoom);
 
@@ -355,6 +402,15 @@ public partial class EditorView : UserControl
 
     private void OnCanvasMouseUp(object sender, MouseButtonEventArgs e)
     {
+        if (_panningBackground)
+        {
+            _panningBackground = false;
+            CanvasHost.ReleaseMouseCapture();
+            BuildProperties(null);
+            EditorStatus.Text = "背景位置已更新";
+            return;
+        }
+
         if (!_dragging)
         {
             return;
@@ -523,8 +579,8 @@ public partial class EditorView : UserControl
             case TextLayer text:
                 AddField("字号", text.Font.Size.ToString("0"), value => UpdateLayer(l => l is TextLayer t ? (Layer)(t with { Font = t.Font with { Size = Math.Max(4, ParseNumber(value, t.Font.Size)) } }) : l));
                 AddField("颜色", text.Color, value => UpdateLayer(l => l is TextLayer t ? (Layer)(t with { Color = value }) : l));
-                AddChoice("对齐", new[] { "left", "center", "right" }, text.Align, value => UpdateLayer(l => l is TextLayer t ? (Layer)(t with { Align = value }) : l));
-                AddChoice("垂直", new[] { "top", "middle", "bottom" }, text.VerticalAlign, value => UpdateLayer(l => l is TextLayer t ? (Layer)(t with { VerticalAlign = value }) : l));
+                AddChoice("对齐", new[] { "left", "center", "right" }, text.Align, value => UpdateLayer(l => l is TextLayer t ? (Layer)(t with { Align = value }) : l), display: value => Label(AlignNames, value));
+                AddChoice("垂直", new[] { "top", "middle", "bottom" }, text.VerticalAlign, value => UpdateLayer(l => l is TextLayer t ? (Layer)(t with { VerticalAlign = value }) : l), display: value => Label(VerticalNames, value));
                 break;
 
             case BarLayer bar:
@@ -534,7 +590,7 @@ public partial class EditorView : UserControl
                 AddField("填充色", bar.Fill, value => UpdateLayer(l => l is BarLayer b ? (Layer)(b with { Fill = value }) : l));
                 AddField("轨道色", bar.Track, value => UpdateLayer(l => l is BarLayer b ? (Layer)(b with { Track = value }) : l));
                 AddField("圆角", bar.Radius.ToString("0"), value => UpdateLayer(l => l is BarLayer b ? (Layer)(b with { Radius = Math.Max(0, ParseNumber(value, b.Radius)) }) : l));
-                AddChoice("方向", new[] { "horizontal", "vertical" }, bar.Orientation, value => UpdateLayer(l => l is BarLayer b ? (Layer)(b with { Orientation = value }) : l));
+                AddChoice("方向", new[] { "horizontal", "vertical" }, bar.Orientation, value => UpdateLayer(l => l is BarLayer b ? (Layer)(b with { Orientation = value }) : l), display: value => Label(OrientationNames, value));
                 break;
 
             case RingLayer ring:
@@ -556,12 +612,45 @@ public partial class EditorView : UserControl
 
             case ImageLayer image:
                 AddField("资源", image.Asset, value => UpdateLayer(l => l is ImageLayer i ? (Layer)(i with { Asset = value }) : l));
-                AddChoice("适应", new[] { "contain", "cover", "stretch" }, image.Fit, value => UpdateLayer(l => l is ImageLayer i ? (Layer)(i with { Fit = value }) : l));
+                AddChoice("适应", new[] { "contain", "cover", "stretch" }, image.Fit, value => UpdateLayer(l => l is ImageLayer i ? (Layer)(i with { Fit = value }) : l), display: value => Label(FitNames, value));
                 break;
         }
 
     }
 
+    private static readonly Dictionary<string, string> KindNames = new()
+    {
+        ["solid"] = "纯色", ["gradient"] = "渐变", ["image"] = "图片 / 动图 / 视频", ["procedural"] = "动态背景",
+    };
+
+    private static readonly Dictionary<string, string> PresetNames = new()
+    {
+        ["aurora"] = "极光", ["waves"] = "波浪", ["particles"] = "粒子", ["stars"] = "星空",
+        ["grid"] = "网格", ["plasma"] = "等离子", ["rain"] = "数字雨", ["ronin"] = "浪人", ["sprinter"] = "疾跑者",
+    };
+
+    private static readonly Dictionary<string, string> FitNames = new()
+    {
+        ["cover"] = "铺满裁切", ["contain"] = "完整显示", ["stretch"] = "拉伸",
+    };
+
+    private static readonly Dictionary<string, string> AlignNames = new()
+    {
+        ["left"] = "左", ["center"] = "中", ["right"] = "右",
+    };
+
+    private static readonly Dictionary<string, string> VerticalNames = new()
+    {
+        ["top"] = "上", ["middle"] = "中", ["bottom"] = "下",
+    };
+
+    private static readonly Dictionary<string, string> OrientationNames = new()
+    {
+        ["horizontal"] = "水平", ["vertical"] = "垂直",
+    };
+
+    private static string Label(Dictionary<string, string> map, string key)
+        => map.TryGetValue(key, out string? value) ? value : key;
     private IReadOnlyList<SensorDescriptor>? _choiceList;
 
     private IReadOnlyList<SensorDescriptor> SensorChoices => _choiceList ??= BuildChoices();
@@ -855,7 +944,12 @@ public partial class EditorView : UserControl
         PropsPanel.Children.Add(panel);
     }
 
-    private void AddChoice(string label, string[] items, string current, Action<string> apply)
+    private void AddChoice(
+        string label,
+        string[] items,
+        string current,
+        Action<string> apply,
+        Func<string, string>? display = null)
     {
         var panel = new StackPanel { Margin = new Thickness(0, 0, 0, 8) };
         panel.Children.Add(new TextBlock
@@ -869,15 +963,15 @@ public partial class EditorView : UserControl
         var combo = new ComboBox();
         foreach (string item in items)
         {
-            combo.Items.Add(item);
+            combo.Items.Add(display is null ? item : display(item));
         }
 
-        combo.SelectedItem = items.Contains(current) ? current : items.FirstOrDefault();
+        combo.SelectedIndex = Math.Max(0, Array.IndexOf(items, current));
         combo.SelectionChanged += (_, _) =>
         {
-            if (combo.SelectedItem is string selected)
+            if (combo.SelectedIndex >= 0 && combo.SelectedIndex < items.Length)
             {
-                apply(selected);
+                apply(items[combo.SelectedIndex]);
             }
         };
 

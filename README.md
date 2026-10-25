@@ -1,4 +1,4 @@
-﻿# OpenTRCC
+# OpenTRCC
 
 <img src="assets/icon/opentrcc.png" width="96" alt="OpenTRCC icon">
 
@@ -43,6 +43,11 @@ powershell -NoProfile -ExecutionPolicy Bypass -File scripts\build.ps1 -Configura
 # 启动桌面应用
 .\src\OpenTRCC.App\bin\Release\net9.0-windows\OpenTRCC.exe
 ```
+
+## 数据位置
+
+- 用户主题与导入素材：安装目录 `themes\`（不可写时回退到 `%LocalAppData%\OpenTRCC\themes`）
+- 设置/日志：`%LocalAppData%\OpenTRCC`
 
 ## 发布打包
 

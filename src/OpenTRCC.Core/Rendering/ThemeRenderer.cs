@@ -1,4 +1,4 @@
-using OpenTRCC.Core.Binding;
+﻿using OpenTRCC.Core.Binding;
 using OpenTRCC.Core.Data;
 using OpenTRCC.Core.Imaging;
 using OpenTRCC.Core.Themes;
@@ -146,7 +146,7 @@ public sealed class ThemeRenderer
             return;
         }
 
-        var destination = FitRect(bitmap.Width, bitmap.Height, new SKRect(0, 0, width, height), background.Fit, background.Zoom);
+        var destination = Offset(FitRect(bitmap.Width, bitmap.Height, new SKRect(0, 0, width, height), background.Fit, background.Zoom), background);
 
         using (var paint = new SKPaint { IsAntialias = true })
         {
@@ -167,7 +167,7 @@ public sealed class ThemeRenderer
         SKCanvas canvas, BgraImage frame, ThemeBackground background, int width, int height)
     {
         using SKBitmap bitmap = TestPatternRenderer.FromBgra(frame);
-        var destination = FitRect(frame.Width, frame.Height, new SKRect(0, 0, width, height), background.Fit, background.Zoom);
+        var destination = Offset(FitRect(frame.Width, frame.Height, new SKRect(0, 0, width, height), background.Fit, background.Zoom), background);
 
         using (var paint = new SKPaint { IsAntialias = true })
         {
@@ -518,6 +518,20 @@ public sealed class ThemeRenderer
                     box.MidX + width / 2, box.MidY + height / 2), zoom);
             }
         }
+    }
+
+    private static SKRect Offset(SKRect rect, ThemeBackground background)
+    {
+        if (background.OffsetX == 0 && background.OffsetY == 0)
+        {
+            return rect;
+        }
+
+        return new SKRect(
+            rect.Left + (float)background.OffsetX,
+            rect.Top + (float)background.OffsetY,
+            rect.Right + (float)background.OffsetX,
+            rect.Bottom + (float)background.OffsetY);
     }
 
     private static SKRect ScaleAroundCenter(SKRect rect, double zoom)

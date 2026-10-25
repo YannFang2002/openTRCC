@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "id": "telemetry-320x240",
-  "name": "Telemetry",
+  "name": "遥测",
   "canvas": {
     "width": 320,
     "height": 240,

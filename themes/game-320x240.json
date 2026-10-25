@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "id": "game-320x240",
-  "name": "Game",
+  "name": "游戏",
   "canvas": {
     "width": 320,
     "height": 240,

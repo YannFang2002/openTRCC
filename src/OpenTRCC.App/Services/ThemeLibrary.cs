@@ -16,12 +16,10 @@ public sealed class ThemeLibrary
     public ThemeLibrary(string? bundledDirectory = null, string? userDirectory = null)
     {
         BundledDirectory = bundledDirectory ?? ResolveBundledDirectory();
-        UserDirectory = userDirectory ?? Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-            "OpenTRCC",
-            "themes");
+        UserDirectory = userDirectory ?? ResolveWritableDirectory(BundledDirectory);
 
         System.IO.Directory.CreateDirectory(UserDirectory);
+        MigrateLegacyThemes();
         Reload();
     }
 
@@ -45,7 +43,13 @@ public sealed class ThemeLibrary
         var errors = new List<string>();
 
         LoadFrom(BundledDirectory, themes, byId, errors);
-        LoadFrom(UserDirectory, themes, byId, errors);
+        if (!string.Equals(
+                Path.GetFullPath(BundledDirectory),
+                Path.GetFullPath(UserDirectory),
+                StringComparison.OrdinalIgnoreCase))
+        {
+            LoadFrom(UserDirectory, themes, byId, errors);
+        }
 
         Themes = themes;
         Errors = errors;
@@ -140,6 +144,73 @@ public sealed class ThemeLibrary
             {
                 errors.Add($"{Path.GetFileName(file)}: {ex.Message}");
             }
+        }
+    }
+
+    /// <summary>
+    /// Prefer the install directory next to the executable (portable, keeps
+    /// imports on the same drive); fall back to LocalAppData when it is read-only.
+    /// </summary>
+    private static string ResolveWritableDirectory(string bundled)
+    {
+        try
+        {
+            string probe = Path.Combine(bundled, ".write-test");
+            File.WriteAllText(probe, string.Empty);
+            File.Delete(probe);
+            return bundled;
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            return Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+                "OpenTRCC",
+                "themes");
+        }
+    }
+
+    /// <summary>Copies themes/assets created by older versions that lived in LocalAppData.</summary>
+    private void MigrateLegacyThemes()
+    {
+        string legacy = Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+            "OpenTRCC",
+            "themes");
+
+        if (!System.IO.Directory.Exists(legacy)
+            || string.Equals(Path.GetFullPath(legacy), Path.GetFullPath(UserDirectory), StringComparison.OrdinalIgnoreCase))
+        {
+            return;
+        }
+
+        foreach (string file in System.IO.Directory.GetFiles(legacy, "*.json"))
+        {
+            string target = Path.Combine(UserDirectory, Path.GetFileName(file));
+            if (!File.Exists(target))
+            {
+                File.Copy(file, target);
+            }
+        }
+
+        string legacyAssets = Path.Combine(legacy, "assets");
+        string targetAssets = Path.Combine(UserDirectory, "assets");
+        if (System.IO.Directory.Exists(legacyAssets) && !System.IO.Directory.Exists(targetAssets))
+        {
+            CopyDirectory(legacyAssets, targetAssets);
+        }
+    }
+
+    private static void CopyDirectory(string source, string target)
+    {
+        System.IO.Directory.CreateDirectory(target);
+        foreach (string file in System.IO.Directory.GetFiles(source))
+        {
+            File.Copy(file, Path.Combine(target, Path.GetFileName(file)));
+        }
+
+        foreach (string directory in System.IO.Directory.GetDirectories(source))
+        {
+            CopyDirectory(directory, Path.Combine(target, Path.GetFileName(directory)));
         }
     }
 

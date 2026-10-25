@@ -5,13 +5,18 @@
 ## 下载
 
 - 文件：`OpenTRCC-0.1.0-win-x64.zip`（73.7 MB，自包含单文件，无需安装 .NET）
-- SHA-256：`6B92CE1CFDC892D8B4170DADBA1D0F1D3B4DD13E8F573F49D6D1E8A3F584D7B9`
+- SHA-256：`25D8A345F220C8C57776FF0BA622499CF8069652495FF3CA4C91FDADD5B1877E`
 
 ## 安装
 
 1. 解压到任意目录（例如 `D:\Tools\OpenTRCC`）
 2. **先关闭 TRCC**（它独占屏幕 HID 设备）
 3. 双击 `OpenTRCC.exe`
+
+## 数据位置
+
+- 主题与导入素材：安装目录 `themes\`（安装目录不可写时回退到 `%LocalAppData%\OpenTRCC\themes`）
+- 设置与日志：`%LocalAppData%\OpenTRCC`
 
 ## 亮点
 

@@ -61,6 +61,12 @@ public sealed record ThemeBackground
 
     /// <summary>Extra zoom for image/GIF/video backgrounds (1 = fit, &gt;1 crops in).</summary>
     public double Zoom { get; init; } = 1;
+
+    /// <summary>Horizontal offset in canvas pixels (positive moves right).</summary>
+    public double OffsetX { get; init; }
+
+    /// <summary>Vertical offset in canvas pixels (positive moves down).</summary>
+    public double OffsetY { get; init; }
 }
 
 [JsonPolymorphic(TypeDiscriminatorPropertyName = "type")]
