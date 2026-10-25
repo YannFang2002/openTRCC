@@ -76,6 +76,10 @@ public sealed class ThemeRenderer
             case ImageLayer image:
                 DrawImage(canvas, image);
                 break;
+
+            case RectLayer rect:
+                DrawRectBackdrop(canvas, rect);
+                break;
         }
     }
 
@@ -441,6 +445,16 @@ public sealed class ThemeRenderer
 
             canvas.DrawPath(area, fill);
         }
+    }
+
+    private void DrawRectBackdrop(SKCanvas canvas, RectLayer layer)
+    {
+        SKColor color = ColorSpec.Parse(layer.Fill, SKColors.Black).WithAlpha(Alpha(layer.Opacity));
+        using var paint = new SKPaint { IsAntialias = true, Color = color, Style = SKPaintStyle.Fill };
+        float radius = (float)Math.Max(0, layer.Radius);
+        canvas.DrawRoundRect(new SKRect(
+            (float)layer.X, (float)layer.Y,
+            (float)(layer.X + layer.W), (float)(layer.Y + layer.H)), radius, radius, paint);
     }
 
     private void DrawImage(SKCanvas canvas, ImageLayer layer)

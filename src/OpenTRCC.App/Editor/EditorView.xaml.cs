@@ -552,6 +552,14 @@ public partial class EditorView : UserControl
         Min = 0, Max = 240,
     });
 
+    private void OnAddRect(object sender, RoutedEventArgs e) => AddLayer(new RectLayer
+    {
+        Id = $"rect-{NextId()}",
+        X = 16, Y = 180, W = 288, H = 48,
+        Fill = "#B3000000",
+        Radius = 10,
+    });
+
     private void OnAddImage(object sender, RoutedEventArgs e) => AddLayer(new ImageLayer
     {
         Id = $"image-{NextId()}",
@@ -683,6 +691,11 @@ public partial class EditorView : UserControl
                 AddField("最小", spark.Min.ToString("0.##"), value => UpdateLayer(l => l is SparklineLayer s ? (Layer)(s with { Min = ParseNumber(value, s.Min) }) : l));
                 AddField("最大", spark.Max.ToString("0.##"), value => UpdateLayer(l => l is SparklineLayer s ? (Layer)(s with { Max = ParseNumber(value, s.Max) }) : l));
                 AddColorField("颜色", spark.Stroke, value => UpdateLayer(l => l is SparklineLayer s ? (Layer)(s with { Stroke = value }) : l));
+                break;
+
+            case RectLayer rect:
+                AddColorField("填充色（#AARRGGBB 含透明度）", rect.Fill, value => UpdateLayer(l => l is RectLayer r ? (Layer)(r with { Fill = value }) : l));
+                AddField("圆角", rect.Radius.ToString("0"), value => UpdateLayer(l => l is RectLayer r ? (Layer)(r with { Radius = Math.Max(0, ParseNumber(value, r.Radius)) }) : l));
                 break;
 
             case ImageLayer image:

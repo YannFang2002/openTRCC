@@ -17,6 +17,7 @@
                 <ui:Button Content="环形" Click="OnAddRing" Margin="0,0,6,6" />
                 <ui:Button Content="曲线" Click="OnAddSparkline" Margin="0,0,6,6" />
                 <ui:Button Content="图片" Click="OnAddImage" Margin="0,0,6,6" />
+                <ui:Button Content="矩形" Click="OnAddRect" Margin="0,0,6,6" />
                 <ui:Button Content="撤销" Click="OnUndo" Margin="0,0,6,6" />
                 <ui:Button Content="重做" Click="OnRedo" Margin="0,0,6,6" />
                 <ui:Button Content="新建主题" Click="OnNewTheme" Margin="0,0,6,6" />

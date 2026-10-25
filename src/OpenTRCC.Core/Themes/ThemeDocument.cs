@@ -75,6 +75,7 @@ public sealed record ThemeBackground
 [JsonDerivedType(typeof(RingLayer), "ring")]
 [JsonDerivedType(typeof(SparklineLayer), "sparkline")]
 [JsonDerivedType(typeof(ImageLayer), "image")]
+[JsonDerivedType(typeof(RectLayer), "rect")]
 public abstract record Layer
 {
     public string Id { get; init; } = string.Empty;
@@ -183,6 +184,14 @@ public sealed record SparklineLayer : Layer
     public string? Fill { get; init; }
 
     public bool Smooth { get; init; } = true;
+}
+
+/// <summary>Solid or translucent rounded rectangle, typically a backdrop for text.</summary>
+public sealed record RectLayer : Layer
+{
+    public string Fill { get; init; } = "#B3000000";
+
+    public double Radius { get; init; } = 8;
 }
 
 public sealed record ImageLayer : Layer
