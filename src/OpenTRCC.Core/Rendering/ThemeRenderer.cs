@@ -146,7 +146,7 @@ public sealed class ThemeRenderer
             return;
         }
 
-        var destination = Offset(FitRect(bitmap.Width, bitmap.Height, new SKRect(0, 0, width, height), background.Fit, background.Zoom), background);
+        var destination = Offset(FitRect(bitmap.Width, bitmap.Height, new SKRect(0, 0, width, height), background.Fit, background.Zoom), background, width, height);
 
         using (var paint = new SKPaint { IsAntialias = true })
         {
@@ -167,7 +167,7 @@ public sealed class ThemeRenderer
         SKCanvas canvas, BgraImage frame, ThemeBackground background, int width, int height)
     {
         using SKBitmap bitmap = TestPatternRenderer.FromBgra(frame);
-        var destination = Offset(FitRect(frame.Width, frame.Height, new SKRect(0, 0, width, height), background.Fit, background.Zoom), background);
+        var destination = Offset(FitRect(frame.Width, frame.Height, new SKRect(0, 0, width, height), background.Fit, background.Zoom), background, width, height);
 
         using (var paint = new SKPaint { IsAntialias = true })
         {
@@ -520,18 +520,27 @@ public sealed class ThemeRenderer
         }
     }
 
-    private static SKRect Offset(SKRect rect, ThemeBackground background)
+    private static SKRect Offset(SKRect rect, ThemeBackground background, int width, int height)
     {
-        if (background.OffsetX == 0 && background.OffsetY == 0)
+        float left = rect.Left + (float)background.OffsetX;
+        float top = rect.Top + (float)background.OffsetY;
+
+        // In cover mode the picture must keep covering the canvas: clamp the pan so
+        // dragging never exposes a black edge.
+        if (background.Fit.Equals("cover", StringComparison.OrdinalIgnoreCase))
         {
-            return rect;
+            if (rect.Width >= width)
+            {
+                left = Math.Clamp(left, width - rect.Width, 0);
+            }
+
+            if (rect.Height >= height)
+            {
+                top = Math.Clamp(top, height - rect.Height, 0);
+            }
         }
 
-        return new SKRect(
-            rect.Left + (float)background.OffsetX,
-            rect.Top + (float)background.OffsetY,
-            rect.Right + (float)background.OffsetX,
-            rect.Bottom + (float)background.OffsetY);
+        return new SKRect(left, top, left + rect.Width, top + rect.Height);
     }
 
     private static SKRect ScaleAroundCenter(SKRect rect, double zoom)

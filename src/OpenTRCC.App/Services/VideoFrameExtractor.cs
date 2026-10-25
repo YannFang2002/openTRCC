@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text.Json;
@@ -15,9 +15,9 @@ using SkiaSharp;
 namespace OpenTRCC.App.Services;
 
 /// <summary>
-/// Converts a video into a folder of 320x240 JPEG frames (and meta.json) once, at
-/// import time. Playback then only decodes JPEGs — no MediaPlayer, no per-frame
-/// 1080p scaling in the render loop.
+/// Converts a video into a folder of JPEG frames (and meta.json) once, at import
+/// time. Frames keep the source aspect ratio, so the theme's fit mode decides
+/// whether they are cropped, fitted or stretched — no baked-in letterbox.
 /// </summary>
 public static class VideoFrameExtractor
 {
@@ -78,6 +78,14 @@ public static class VideoFrameExtractor
                     double seconds = Math.Min(duration.TotalSeconds, maxSeconds);
                     frameCount = Math.Max(1, (int)Math.Round(seconds * fps));
 
+                    // Preserve the source aspect ratio: a 16:9 clip becomes 320x180,
+                    // so cover/contain/stretch have a visible effect in the editor.
+                    double fit = Math.Min(
+                        (double)Width / player.NaturalVideoWidth,
+                        (double)Height / player.NaturalVideoHeight);
+                    int frameWidth = Math.Max(2, (int)Math.Round(player.NaturalVideoWidth * fit));
+                    int frameHeight = Math.Max(2, (int)Math.Round(player.NaturalVideoHeight * fit));
+
                     var timer = new DispatcherTimer(
                         TimeSpan.FromMilliseconds(1000.0 / fps),
                         DispatcherPriority.Render,
@@ -85,8 +93,12 @@ public static class VideoFrameExtractor
                         {
                             try
                             {
-                                byte[] pixels = Capture(player);
-                                WriteJpeg(Path.Combine(directory, $"frame-{index:D5}.jpg"), pixels);
+                                byte[] pixels = Capture(player, frameWidth, frameHeight);
+                                WriteJpeg(
+                                    Path.Combine(directory, $"frame-{index:D5}.jpg"),
+                                    pixels,
+                                    frameWidth,
+                                    frameHeight);
                                 index++;
                                 written = index;
                                 progress?.Report(frameCount == 0 ? 0 : (double)index / frameCount);
@@ -97,7 +109,7 @@ public static class VideoFrameExtractor
                                 }
 
                                 var meta = new SequenceMeta(
-                                    fps, Width, Height, index, Path.GetFileName(videoPath));
+                                    fps, frameWidth, frameHeight, index, Path.GetFileName(videoPath));
                                 File.WriteAllText(metaPath, JsonSerializer.Serialize(meta));
                                 player.Close();
                                 completed.Set();
@@ -158,36 +170,26 @@ public static class VideoFrameExtractor
         return metaPath;
     }
 
-    private static byte[] Capture(MediaPlayer player)
+    private static byte[] Capture(MediaPlayer player, int width, int height)
     {
-        // Cover: fill the canvas and crop the overflow, so imported clips have
-        // no baked-in letterbox bars.
-        double scale = Math.Max(
-            (double)Width / player.NaturalVideoWidth,
-            (double)Height / player.NaturalVideoHeight);
-        double drawWidth = player.NaturalVideoWidth * scale;
-        double drawHeight = player.NaturalVideoHeight * scale;
-        var destination = new Rect(
-            (Width - drawWidth) / 2, (Height - drawHeight) / 2, drawWidth, drawHeight);
-
         var visual = new DrawingVisual();
         using (DrawingContext context = visual.RenderOpen())
         {
-            context.DrawRectangle(Brushes.Black, null, new Rect(0, 0, Width, Height));
-            context.DrawVideo(player, destination);
+            context.DrawRectangle(Brushes.Black, null, new Rect(0, 0, width, height));
+            context.DrawVideo(player, new Rect(0, 0, width, height));
         }
 
-        var target = new RenderTargetBitmap(Width, Height, 96, 96, PixelFormats.Pbgra32);
+        var target = new RenderTargetBitmap(width, height, 96, 96, PixelFormats.Pbgra32);
         target.Render(visual);
 
-        var pixels = new byte[Width * Height * 4];
-        target.CopyPixels(pixels, Width * 4, 0);
+        var pixels = new byte[width * height * 4];
+        target.CopyPixels(pixels, width * 4, 0);
         return pixels;
     }
 
-    private static void WriteJpeg(string path, byte[] bgra)
+    private static void WriteJpeg(string path, byte[] bgra, int width, int height)
     {
-        using SKBitmap bitmap = TestPatternRenderer.FromBgra(new BgraImage(Width, Height, bgra));
+        using SKBitmap bitmap = TestPatternRenderer.FromBgra(new BgraImage(width, height, bgra));
         File.WriteAllBytes(path, TestPatternRenderer.EncodeJpeg(bitmap, 85));
     }
 }

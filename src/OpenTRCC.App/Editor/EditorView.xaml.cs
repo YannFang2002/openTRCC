@@ -154,37 +154,66 @@ public partial class EditorView : UserControl
             }),
             display: value => Label(KindNames, value));
 
-        AddChoice(
-            "动态预设",
-            ProceduralBackgrounds.Presets,
-            background.Preset,
-            value => SetBackground(b => b with { Kind = BackgroundKind.Procedural, Preset = value }),
-            display: value => Label(PresetNames, value));
+        switch (background.Kind)
+        {
+            case BackgroundKind.Gradient:
+                AddColorFields(background, 2);
+                AddField(
+                    "渐变角度",
+                    background.Angle.ToString("0"),
+                    value => SetBackground(b => b with { Angle = ParseNumber(value, b.Angle) }));
+                break;
 
-        AddField(
-            "动态速度",
-            background.Speed.ToString("0.##"),
-            value => SetBackground(b => b with { Speed = Math.Clamp(ParseNumber(value, b.Speed), 0.05, 5) }));
+            case BackgroundKind.Image:
+                AddImageFields(background);
+                break;
 
-        AddField(
-            "颜色 1",
-            background.Colors.FirstOrDefault() ?? "#0B1020",
-            value => SetBackground(b => b with { Colors = WithColor(b.Colors, 0, value) }));
+            case BackgroundKind.Procedural:
+                AddChoice(
+                    "动态预设",
+                    ProceduralBackgrounds.Presets,
+                    background.Preset,
+                    value => SetBackground(b => b with { Preset = value }),
+                    display: value => Label(PresetNames, value));
 
-        AddField(
-            "颜色 2（渐变）",
-            background.Colors.Skip(1).FirstOrDefault() ?? "#1B2A4A",
-            value => SetBackground(b => b with { Colors = WithColor(b.Colors, 1, value) }));
+                AddField(
+                    "动态速度",
+                    background.Speed.ToString("0.##"),
+                    value => SetBackground(b => b with { Speed = Math.Clamp(ParseNumber(value, b.Speed), 0.05, 5) }));
 
-        AddField(
-            "渐变角度",
-            background.Angle.ToString("0"),
-            value => SetBackground(b => b with { Angle = ParseNumber(value, b.Angle) }));
+                AddColorFields(background, 4);
+                AddField(
+                    "暗化 (0-1)",
+                    background.Dim.ToString("0.##"),
+                    value => SetBackground(b => b with { Dim = Math.Clamp(ParseNumber(value, b.Dim), 0, 1) }));
+                break;
 
+            default:
+                AddColorFields(background, 1);
+                break;
+        }
+    }
+
+    private void AddColorFields(ThemeBackground background, int count)
+    {
+        string[] fallback = { "#0B1020", "#1B2A4A", "#2DD4BF", "#A855F7" };
+
+        for (int index = 0; index < count; index++)
+        {
+            int captured = index;
+            AddField(
+                $"颜色 {index + 1}",
+                background.Colors.Skip(index).FirstOrDefault() ?? fallback[Math.Min(index, fallback.Length - 1)],
+                value => SetBackground(b => b with { Colors = WithColor(b.Colors, captured, value) }));
+        }
+    }
+
+    private void AddImageFields(ThemeBackground background)
+    {
         AddField(
             "图片 / 动图 / 视频路径",
             background.Asset ?? string.Empty,
-            value => SetBackground(b => b with { Kind = BackgroundKind.Image, Asset = value }));
+            value => SetBackground(b => b with { Asset = value }));
 
         var pick = new Wpf.Ui.Controls.Button
         {
@@ -210,7 +239,7 @@ public partial class EditorView : UserControl
                 return;
             }
 
-            SetBackground(b => b with { Kind = BackgroundKind.Image, Asset = dialog.FileName });
+            SetBackground(b => b with { Asset = dialog.FileName, Fit = "cover", Zoom = 1 });
         };
 
         PropsPanel.Children.Add(pick);
@@ -237,10 +266,55 @@ public partial class EditorView : UserControl
             background.OffsetY.ToString("0"),
             value => SetBackground(b => b with { OffsetY = ParseNumber(value, b.OffsetY) }));
 
+        AddNudgePad();
+
         AddField(
             "暗化 (0-1)",
             background.Dim.ToString("0.##"),
             value => SetBackground(b => b with { Dim = Math.Clamp(ParseNumber(value, b.Dim), 0, 1) }));
+    }
+
+    /// <summary>Arrow pad that nudges the background by one canvas pixel per click.</summary>
+    private void AddNudgePad()
+    {
+        AddHeader("位置微调（每次 1 像素）");
+
+        var grid = new Grid { Width = 132, HorizontalAlignment = HorizontalAlignment.Left, Margin = new Thickness(0, 0, 0, 10) };
+        for (int i = 0; i < 3; i++)
+        {
+            grid.ColumnDefinitions.Add(new ColumnDefinition());
+            grid.RowDefinitions.Add(new RowDefinition());
+        }
+
+        AddNudge(grid, "↑", 0, 0, 1);
+        AddNudge(grid, "←", 1, 0, -1);
+        AddNudge(grid, "→", 1, 2, 0);
+        AddNudge(grid, "↓", 2, 1, -1);
+    }
+
+    private void AddNudge(Grid grid, string label, int row, int column, int delta)
+    {
+        var button = new Wpf.Ui.Controls.Button
+        {
+            Content = label,
+            Padding = new Thickness(0),
+            Margin = new Thickness(2),
+            Width = 38,
+            Height = 32,
+        };
+
+        if (label is "↑" or "↓")
+        {
+            button.Click += (_, _) => SetBackground(b => b with { OffsetY = b.OffsetY + delta });
+        }
+        else
+        {
+            button.Click += (_, _) => SetBackground(b => b with { OffsetX = b.OffsetX + delta });
+        }
+
+        Grid.SetRow(button, row);
+        Grid.SetColumn(button, column);
+        grid.Children.Add(button);
     }
 
     /// <summary>
