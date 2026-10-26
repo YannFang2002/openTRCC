@@ -10,7 +10,7 @@
 ## 现在能做什么
 
 - **屏幕**：HID 通道直连（513 字节报告），RGB565 全帧 320×240，实测 23.2fps 上限、实际推流约 21fps
-- **主题**：`themes/*.json`（内置 12 套），text / bar / ring / sparkline / image 五类图层；背景支持纯色/渐变/图片/GIF/视频/**程序化动态**（aurora / waves / particles / stars / grid / plasma / rain / ronin / sprinter）
+- **主题**：`themes/*.json`（内置 10 套），text / bar / ring / sparkline / image 五类图层；背景支持纯色/渐变/图片/GIF/视频/**程序化动态**（aurora / waves / particles / stars / grid / plasma / rain / ronin / sprinter）
 - **数据**：系统计数器、LibreHardwareMonitor（**全量传感器，实测 313 个**：逐核温度/占用、GPU、主板、内存、风扇…）、PresentMon 2.6.0（任意应用 FPS + 1% low）
 - **编辑器**：2× 画布、拖拽移动、图层增删、分类型属性、传感器绑定、撤销/重做、保存即上屏；背景支持纯色/渐变/图片/**GIF/视频**（视频导入时转成 320×240 JPEG 帧序列，播放只解 JPEG）——概览（实时预览/主题/启停）、传感器（全量列表 + 搜索）、设置（来源状态/路径/自启/诊断）、日志（实时 tail）；托盘常驻、单实例、HKCU 自启
 - **诊断**：`OpenTRCC.Probe` 命令行（握手 / 测试图 / bench / 渲染 / 传感器）
@@ -24,6 +24,16 @@
 3. 双击 `OpenTRCC.exe`
 
 压缩包是自包含单文件版本，不需要安装 .NET 运行时。首次启动会在 `%LocalAppData%\OpenTRCC` 创建日志和设置。
+
+## CPU 温度与 PawnIO
+
+CPU 温度/功耗通过 LibreHardwareMonitor 0.9.7 + **PawnIO** 驱动读取（不再是会被安全软件拦截的 WinRing0）：
+
+1. 安装 [PawnIO](https://pawnio.eu/)（官方签名版，安装后 `C:\Program Files\PawnIO`）
+2. 以管理员身份运行 OpenTRCC（设置页有「以管理员身份重启」；或启用计划任务 `OpenTRCC_Startup`）
+3. 启动时应用会自动执行 `sc start PawnIO`
+
+没有 PawnIO 或非管理员时，GPU 温度/占用仍然可用，CPU 温度显示 `—`。
 
 ## 环境
 

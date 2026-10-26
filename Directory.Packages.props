@@ -1,4 +1,4 @@
-<Project>
+﻿<Project>
 
   <PropertyGroup>
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
@@ -7,7 +7,7 @@
   <ItemGroup>
     <PackageVersion Include="SkiaSharp" Version="2.88.9" />
     <PackageVersion Include="SkiaSharp.NativeAssets.Win32" Version="2.88.9" />
-    <PackageVersion Include="LibreHardwareMonitorLib" Version="0.9.4" />
+    <PackageVersion Include="LibreHardwareMonitorLib" Version="0.9.7-pre771" />
     <PackageVersion Include="WPF-UI" Version="4.3.0" />
     <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="17.12.0" />
     <PackageVersion Include="xunit" Version="2.9.2" />

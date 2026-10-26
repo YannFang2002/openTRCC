@@ -1,4 +1,4 @@
-using System.Globalization;
+﻿using System.Globalization;
 using LibreHardwareMonitor.Hardware;
 using OpenTRCC.Core.Data;
 
@@ -162,21 +162,20 @@ public sealed class LhmSensorSource : ISensorSource, IDisposable
                 anyTemperature = true;
             }
 
+            // LibreHardwareMonitor 0.9.7 reports "Data" in bytes (older builds used
+            // GB for Data and MB for SmallData); normalise to GB once here.
+            double normalized = sensor.SensorType == SensorType.Data
+                ? value / 1024d / 1024d / 1024d
+                : value;
+
             string id = IdFor(hardware.HardwareType, hardwareIndex, sensor);
-            if (sensor.SensorType == SensorType.SmallData && sensor.Name.Contains("Memory Used", StringComparison.OrdinalIgnoreCase))
-            {
-                builder.Add(id, Math.Round(value / 1024.0, 1), "GB");
-            }
-            else
-            {
-                builder.Add(id, Math.Round(value, 1), UnitFor(sensor.SensorType));
-            }
+            builder.Add(id, Math.Round(normalized, 1), UnitFor(sensor.SensorType));
 
             string? canonical = CanonicalId(hardware.HardwareType, sensor);
             if (canonical is not null)
             {
                 double canonicalValue = canonical == "gpu.mem.used"
-                    ? Math.Round(value / 1024.0, 1)
+                    ? Math.Round(normalized, 1)
                     : Math.Round(value, 1);
                 builder.Add(canonical, canonicalValue, UnitFor(sensor.SensorType));
             }
@@ -258,7 +257,6 @@ public sealed class LhmSensorSource : ISensorSource, IDisposable
         SensorType.Voltage => "V",
         SensorType.Current => "A",
         SensorType.Data => "GB",
-        SensorType.SmallData => "MB",
         SensorType.Throughput => "MB/s",
         _ => string.Empty,
     };
@@ -305,7 +303,7 @@ public sealed class LhmSensorSource : ISensorSource, IDisposable
             return "gpu.power.package";
         }
 
-        if (gpu && sensor.SensorType == SensorType.SmallData && lower.Contains("memory used"))
+        if (gpu && sensor.SensorType == SensorType.Data && lower.Contains("memory used"))
         {
             return "gpu.mem.used";
         }
@@ -316,6 +314,32 @@ public sealed class LhmSensorSource : ISensorSource, IDisposable
         }
 
         return null;
+    }
+
+    /// <summary>
+    /// LibreHardwareMonitor 0.9.7 reads CPU temperatures through PawnIO; the
+    /// service is Manual, so make sure it is running before opening sensors.
+    /// Needs admin — silently does nothing otherwise.
+    /// </summary>
+    private static void TryStartPawnIo()
+    {
+        try
+        {
+            var start = new System.Diagnostics.ProcessStartInfo("sc.exe", "start PawnIO")
+            {
+                CreateNoWindow = true,
+                UseShellExecute = false,
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+            };
+
+            using System.Diagnostics.Process? process = System.Diagnostics.Process.Start(start);
+            process?.WaitForExit(4000);
+        }
+        catch (Exception)
+        {
+            // Not elevated or PawnIO not installed; GPU sensors still work.
+        }
     }
 
     private void TryOpen()
@@ -338,6 +362,7 @@ public sealed class LhmSensorSource : ISensorSource, IDisposable
                     IsNetworkEnabled = true,
                     IsControllerEnabled = true,
                 };
+                TryStartPawnIo();
                 _computer.Open();
                 _available = true;
                 _reason = null;

@@ -1,4 +1,4 @@
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using System.Globalization;
 using System.Text;
 using OpenTRCC.Core.Data;
@@ -130,6 +130,9 @@ public sealed class PresentMonFpsSource : ISensorSource, IDisposable
     {
         "dwm", "explorer", "SearchHost", "ShellExperienceHost",
         "ApplicationFrameHost", "StartMenuExperienceHost", "TextInputHost",
+        // Our own window renders the theme at ~20fps; without this PresentMon
+        // happily reports that as the game FPS.
+        "OpenTRCC", "PresentMon",
     };
 
     private readonly string? _executable;
